@@ -36,7 +36,7 @@ func DomainUserToEntity(u *dmodels.User) *User {
 	}
 }
 
-func EntityToDomainUser(u *User) *dmodels.User {
+func (u *User) ToDomainUser() *dmodels.User {
 	return &dmodels.User{
 		ID:          u.ID.String(),
 		Username:    u.Username,

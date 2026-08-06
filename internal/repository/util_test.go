@@ -10,14 +10,15 @@ import (
 	"gorm.io/gorm"
 )
 
-func GetTestDB() (*gorm.DB, *cpostgres.PostgresContainer, error) {
+func GetTestDB() *gorm.DB {
 	ctx := context.Background()
 
 	dbName := "postgres"
 	dbUser := "postgres"
 	dbPassword := "postgres"
 
-	ctr, err := cpostgres.Run(ctx,
+	ctr, err := cpostgres.Run(
+		ctx,
 		"postgres:16-alpine",
 		cpostgres.WithInitScripts(filepath.Join("../../social-media-db.sql")),
 		cpostgres.WithDatabase(dbName),
@@ -26,23 +27,20 @@ func GetTestDB() (*gorm.DB, *cpostgres.PostgresContainer, error) {
 		cpostgres.BasicWaitStrategies(),
 	)
 	if err != nil {
-		log.Printf("failed to start container: %s", err)
-		return nil, nil, err
+		panic("failed to start container: " + err.Error())
 	}
 
 	connStr, err := ctr.ConnectionString(ctx, "sslmode=disable")
 	if err != nil {
-		log.Printf("failed to get connection string: %s", err)
-		return nil, nil, err
+		panic("failed to get connection string: " + err.Error())
 	}
 
 	db, err := gorm.Open(postgres.Open(connStr), &gorm.Config{})
 	if err != nil {
-		log.Printf("failed to connect to database: %s", err)
-		return nil, nil, err
+		panic("failed to connect to database: " + err.Error())
 	}
 
 	log.Println("success database connection")
 
-	return db, ctr, nil
+	return db
 }

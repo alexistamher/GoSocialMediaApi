@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alexistamher/social-api-go/internal/domain"
-	"github.com/alexistamher/social-api-go/internal/dto"
+	errors "github.com/alexistamher/social-api-go/internal/domain"
 	"github.com/alexistamher/social-api-go/internal/handler"
+	"github.com/alexistamher/social-api-go/internal/handler/dto"
 	"github.com/alexistamher/social-api-go/internal/handler/mocks"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -32,14 +32,14 @@ func TestAuthHandler_GetInfo_FailGettingUserId(t *testing.T) {
 	h := handler.NewAuthHandler(svc)
 	router := setupAuthRouter(h)
 
-	svc.On("GetInfo", mock.Anything, "").Return(dto.UserResponse{}, domain.ErrMissingUserID)
+	svc.On("GetInfo", mock.Anything, "").Return(dto.UserResponse{}, errors.ErrMissingUserID)
 
 	req := httptest.NewRequest(http.MethodGet, "/auth/info", nil)
 	w := httptest.NewRecorder()
 
 	router.ServeHTTP(w, req)
 
-	assert.Contains(t, w.Body.String(), domain.ErrMissingUserID.Error())
+	assert.Contains(t, w.Body.String(), errors.ErrMissingUserID.Error())
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	svc.AssertExpectations(t)
 }
@@ -48,13 +48,15 @@ func TestAuthHandler_GetInfo_Success(t *testing.T) {
 	svc := new(mocks.AuthServiceMock)
 	h := handler.NewAuthHandler(svc)
 	router := setupAuthRouter(h)
+	bio := "Bio"
+	avatarURL := "https://example.com/avatar.jpg"
 
 	expected := dto.UserResponse{
 		ID:          "user-123",
 		Username:    "john",
 		DisplayName: "John Connor",
-		Bio:         "Bio",
-		AvatarURL:   "https://example.com/avatar.jpg",
+		Bio:         &bio,
+		AvatarURL:   &avatarURL,
 		CreatedAt:   uint(time.Now().Unix()),
 	}
 
@@ -134,7 +136,7 @@ func TestAuthHandler_Register_ServiceError_AlreadyExists(t *testing.T) {
 		DisplayName: "John Connor",
 	}
 
-	svc.On("Register", mock.Anything, reqBody).Return(dto.AuthResponse{}, domain.ErrAlreadyExists)
+	svc.On("Register", mock.Anything, reqBody).Return(dto.AuthResponse{}, errors.ErrAlreadyExists)
 
 	body, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest(http.MethodPost, "/auth/register", bytes.NewReader(body))
@@ -157,7 +159,7 @@ func TestAuthHandler_Login_InvalidCredentials(t *testing.T) {
 		Password: "wrong-password",
 	}
 
-	svc.On("Login", mock.Anything, reqBody).Return(dto.AuthResponse{}, domain.ErrInvalidCredentials)
+	svc.On("Login", mock.Anything, reqBody).Return(dto.AuthResponse{}, errors.ErrInvalidCredentials)
 
 	body, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest(http.MethodPost, "/auth/login", bytes.NewReader(body))

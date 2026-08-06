@@ -1,40 +1,89 @@
 package repository_test
 
 import (
-	"context"
 	"log"
 	"testing"
 
 	"github.com/alexistamher/social-api-go/internal/domain/models"
 	"github.com/alexistamher/social-api-go/internal/repository"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
-func TestAuthRepository_Register(t *testing.T) {
-	db, ctr, err := GetTestDB()
+var db = GetTestDB()
+
+func TestAuthRepository_Register_Success(t *testing.T) {
+	tx := db.Begin()
 	defer func() {
-		err := ctr.Terminate(context.Background())
-		require.NoError(t, err)
+		tx.Rollback()
 	}()
-	if err != nil {
-		t.Fatalf("error opening database: %s", err)
-	}
 
 	a := assert.New(t)
-	r := repository.NewAuthRepository(db)
+	r := repository.NewAuthRepository(tx)
 
 	user := &models.User{
 		Username:    "JohnC",
 		Password:    "passwordHash",
 		Email:       "jconnor@mail.com",
 		DisplayName: "John Connor",
-		// Bio:          "Bio",
-		// AvatarURL:    "avatarUrl",
 	}
 
 	ID, err := r.Register(user)
-	log.Println(err)
 	a.NoError(err)
 	a.NotEmpty(ID)
+}
+
+func TestAuthRepository_Login_Success(t *testing.T) {
+	tx := db.Begin()
+	defer func() {
+		tx.Rollback()
+	}()
+
+	a := assert.New(t)
+	r := repository.NewAuthRepository(tx)
+
+	user := &models.User{
+		Username:    "JohnC",
+		Password:    "passwordHash",
+		Email:       "jconnor@mail.com",
+		DisplayName: "John Connor",
+	}
+
+	ID, _ := r.Register(user)
+	log.Printf("pass: %s", user.Password)
+
+	ruser, err := r.Login(user.Email, user.Password)
+	if err != nil {
+		t.Fatalf("error logging in: %s", err)
+	}
+
+	a.Equal(ID, ruser)
+}
+func TestAuthRepository_GetUserInfo_Success(t *testing.T) {
+	tx := db.Begin()
+	defer func() {
+		tx.Rollback()
+	}()
+
+	a := assert.New(t)
+	r := repository.NewAuthRepository(tx)
+
+	user := &models.User{
+		Username:    "JohnC",
+		Password:    "passwordHash",
+		Email:       "jconnor@mail.com",
+		DisplayName: "John Connor",
+	}
+
+	ID, _ := r.Register(user)
+	log.Printf("pass: %s", user.Password)
+
+	ruser, err := r.GetUserInfo(*ID)
+	if err != nil {
+		t.Fatalf("error logging in: %s", err)
+	}
+
+	a.Equal(*ID, ruser.ID)
+	a.Equal(user.Username, ruser.Username)
+	a.Equal(user.Email, ruser.Email)
+	a.Equal(user.DisplayName, ruser.DisplayName)
 }

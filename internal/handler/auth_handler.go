@@ -3,8 +3,8 @@ package handler
 import (
 	"net/http"
 
-	"github.com/alexistamher/social-api-go/internal/domain"
-	"github.com/alexistamher/social-api-go/internal/dto"
+	errors "github.com/alexistamher/social-api-go/internal/domain"
+	"github.com/alexistamher/social-api-go/internal/handler/dto"
 	"github.com/alexistamher/social-api-go/internal/service"
 	"github.com/gin-gonic/gin"
 )
@@ -53,7 +53,7 @@ func (h *AuthHandler) GetInfo(c *gin.Context) {
 
 	userID, exists := c.Get(ContextKeyUserId)
 	if !exists {
-		respondError(c, domain.ErrMissingUserID)
+		respondError(c, errors.ErrMissingUserID)
 		return
 	}
 
