@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/alexistamher/social-api-go/internal/domain/repository"
+	"github.com/alexistamher/social-api-go/internal/handler/auth"
 	"github.com/alexistamher/social-api-go/internal/handler/dto"
 )
 
@@ -18,23 +19,35 @@ func NewAuthService(repo repository.AuthRepository) AuthService {
 }
 
 func (s *authService) Register(ctx context.Context, req dto.RegisterRequest) (*dto.AuthResponse, error) {
-	_, erro := s.repo.Register(dto.DtoAuthResponseToDomain(&req))
+	userID, erro := s.repo.Register(dto.DtoAuthResponseToDomain(&req))
 	if erro != nil {
-		return &dto.AuthResponse{}, erro
+		return nil, erro
+	}
+	token, erro := auth.GenerateToken(*userID)
+	if erro != nil {
+		return nil, erro
 	}
 
-	// TODO: generate token and return it
-	return &dto.AuthResponse{}, nil
+	return &dto.AuthResponse{
+		AccessToken:  token,
+		RefreshToken: token,
+	}, nil
 }
 
 func (s *authService) Login(ctx context.Context, req dto.LoginRequest) (*dto.AuthResponse, error) {
-	_, erro := s.repo.Login(req.Email, req.Password)
+	userID, erro := s.repo.Login(req.Email, req.Password)
 	if erro != nil {
-		return &dto.AuthResponse{}, erro
+		return nil, erro
+	}
+	token, erro := auth.GenerateToken(*userID)
+	if erro != nil {
+		return nil, erro
 	}
 
-	// TODO: generate token and return it
-	return &dto.AuthResponse{}, nil
+	return &dto.AuthResponse{
+		AccessToken:  token,
+		RefreshToken: token,
+	}, nil
 }
 
 func (s *authService) GetInfo(ctx context.Context, userID string) (*dto.UserResponse, error) {
