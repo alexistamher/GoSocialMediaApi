@@ -56,32 +56,33 @@ CREATE TABLE "friendships" (
 
 CREATE TABLE "posts" (
   "id" uuid PRIMARY KEY DEFAULT (gen_random_uuid()),
-  "author_id" uuid NOT NULL,
   "content" text NOT NULL,
   "visibility" post_visibility NOT NULL DEFAULT 'friends',
   "created_at" timestamp NOT NULL DEFAULT (now()),
   "updated_at" timestamp NOT NULL DEFAULT (now()),
-  "deleted_at" timestamp
+  "deleted_at" timestamp,
+  "post_parent_id" uuid,
+  "author_id" uuid NOT NULL
 );
 
 CREATE TABLE "comments" (
   "id" uuid PRIMARY KEY DEFAULT (gen_random_uuid()),
-  "post_id" uuid NOT NULL,
-  "author_id" uuid NOT NULL,
-  "parent_comment_id" uuid,
   "content" text NOT NULL,
   "created_at" timestamp NOT NULL DEFAULT (now()),
   "updated_at" timestamp NOT NULL DEFAULT (now()),
-  "deleted_at" timestamp
+  "deleted_at" timestamp,
+  "author_id" uuid NOT NULL,
+  "post_id" uuid NOT NULL,
+  "parent_comment_id" uuid
 );
 
 CREATE TABLE "reactions" (
   "id" uuid PRIMARY KEY DEFAULT (gen_random_uuid()),
-  "user_id" uuid NOT NULL,
   "target_type" reaction_target_type NOT NULL,
-  "target_id" uuid NOT NULL,
   "type" reaction_type NOT NULL DEFAULT 'like',
-  "created_at" timestamp NOT NULL DEFAULT (now())
+  "created_at" timestamp NOT NULL DEFAULT (now()),
+  "user_id" uuid NOT NULL,
+  "target_id" uuid NOT NULL
 );
 
 CREATE TABLE "notifications" (
