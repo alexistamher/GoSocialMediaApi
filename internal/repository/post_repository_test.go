@@ -157,4 +157,57 @@ func TestPostRepository_AddCommentToPost_Success(t *testing.T) {
 	a.Len(comments, 5)
 }
 
-func TestPostRepository_AddReactions_Success(t *testing.T) {}
+func TestPostRepository_AddPostReactions_Success(t *testing.T) {
+	tx := db.Begin()
+	t.Cleanup(func() {
+		tx.Rollback()
+	})
+	a := assert.New(t)
+	postRepo := repository.NewPostRepository(tx)
+	authRepo := repository.NewAuthRepository(tx)
+	var userIds []*string
+
+	for i := range 9 {
+		user := &models.User{
+			Username:    "JohnC" + strconv.Itoa(i),
+			Password:    "passwordHash",
+			Email:       "jconnor" + strconv.Itoa(i) + "@mail.com",
+			DisplayName: "John Connor" + strconv.Itoa(i),
+		}
+		UserID, _ := authRepo.Register(user)
+		userIds = append(userIds, UserID)
+	}
+
+	post := &models.Post{
+		Content:    "This is a test post",
+		Visibility: models.Public,
+		Author:     models.User{ID: *userIds[0]},
+	}
+	rpost, _ := postRepo.AddPost(post)
+
+	var reactions = []models.ReactionType{
+		models.LikeType,
+		models.LoveType,
+		models.HahaType,
+		models.WowType,
+		models.SadType,
+		models.AngryType,
+	}
+	for userID := range userIds {
+		reactionIdx := rand.Intn(6)
+		_, _ = postRepo.AddPostReaction(rpost.ID, *userIds[userID], string(reactions[reactionIdx]))
+	}
+	postReactions, _ := postRepo.GetTargetReactions(rpost.ID)
+	a.Len(postReactions, 9)
+
+	previewReactions, _ := postRepo.GetTargetPreviewReactions(rpost.ID)
+	prevCounter := 0
+	for _, count := range previewReactions {
+		prevCounter += count
+	}
+	a.Equal(prevCounter, len(postReactions))
+}
+
+//TODO: TestPostRepository_RemoveReaction from target (post/comment)
+
+//TODO: TestPostRepository_GetPublicNotesFeed: this means return all public friend's posts

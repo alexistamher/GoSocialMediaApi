@@ -3,6 +3,7 @@ package repository
 import (
 	dmodels "github.com/alexistamher/social-api-go/internal/domain/models"
 	"github.com/alexistamher/social-api-go/internal/repository/models"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -109,16 +110,18 @@ func (p *postRepository) GetPostsByUserID(userID string, offset *int, limit uint
 	return dpost, &nextOffset, nil
 }
 
-func (p *postRepository) AddPostReaction(postID string, reactionType string) (*dmodels.Reaction, error) {
-	// TODO: deberia construirse a partir de un maper
-	var reaction models.Reactions
+func (p *postRepository) AddPostReaction(postID string, userID string, reactionType string) (*dmodels.Reaction, error) {
+	var reaction = models.Reactions{
+		TargetID:           uuid.MustParse(postID),
+		UserID:             uuid.MustParse(userID),
+		ReactionType:       reactionType,
+		ReactionTargetType: string(dmodels.PostType),
+	}
 
 	if err := p.db.Create(&reaction).Error; err != nil {
 		return nil, err
 	}
-	// TODO: deberia maprear el reaction entity a domain
-	var dReaction dmodels.Reaction
-	return &dReaction, nil
+	return models.EntityFromReactionDomain(&reaction), nil
 }
 
 func (p *postRepository) DeletePostReaction(postID string) error {
@@ -127,6 +130,30 @@ func (p *postRepository) DeletePostReaction(postID string) error {
 		return err
 	}
 	return nil
+}
+
+func (p *postRepository) GetTargetReactions(targetID string) ([]*dmodels.Reaction, error) {
+	var reactions []models.Reactions
+	if err := p.db.Where("target_id = ?", targetID).Find(&reactions).Error; err != nil {
+		return nil, err
+	}
+	dreactions := make([]*dmodels.Reaction, len(reactions))
+	for i, reaction := range reactions {
+		dreactions[i] = models.EntityFromReactionDomain(&reaction)
+	}
+	return dreactions, nil
+}
+
+func (p *postRepository) GetTargetPreviewReactions(targetID string) (map[string]int, error) {
+	var reactions []models.Reactions
+	if err := p.db.Where("target_id = ?", targetID).Find(&reactions).Error; err != nil {
+		return nil, err
+	}
+	reactionsPreview := make(map[string]int)
+	for _, reaction := range reactions {
+		reactionsPreview[reaction.ReactionType]++
+	}
+	return reactionsPreview, nil
 }
 
 func (p *postRepository) AddComment(comment *dmodels.Comment) (*dmodels.Comment, error) {

@@ -79,8 +79,9 @@ CREATE TABLE "comments" (
 CREATE TABLE "reactions" (
   "id" uuid PRIMARY KEY DEFAULT (gen_random_uuid()),
   "target_type" reaction_target_type NOT NULL,
-  "type" reaction_type NOT NULL DEFAULT 'like',
+  "reaction_type" reaction_type NOT NULL DEFAULT 'like',
   "created_at" timestamp NOT NULL DEFAULT (now()),
+  "deleted_at" timestamp,
   "user_id" uuid NOT NULL,
   "target_id" uuid NOT NULL
 );
