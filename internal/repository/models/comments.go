@@ -27,10 +27,9 @@ func EntityFromCommentDomain(comment *dmodels.Comment) *Comments {
 	}
 
 	return &Comments{
-		ID:              uuid.Must(uuid.Parse(comment.ID)),
 		Content:         comment.Content,
-		AuthorID:        uuid.Must(uuid.Parse(comment.Author.ID)),
-		PostID:          uuid.Must(uuid.Parse(comment.PostID)),
+		AuthorID:        uuid.MustParse(comment.Author.ID),
+		PostID:          uuid.MustParse(comment.PostID),
 		ParentCommentID: parentCommentID,
 		CreatedAt:       time.Unix(int64(comment.CreatedAt), 0),
 	}

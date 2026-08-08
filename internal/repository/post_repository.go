@@ -145,9 +145,15 @@ func (p *postRepository) DeleteComment(commentID string) error {
 }
 
 func (p *postRepository) GetCommentsByPostID(postID string) ([]dmodels.Comment, error) {
-	var comments []dmodels.Comment
+	var comments []models.Comments
 	if err := p.db.Where("post_id = ?", postID).Find(&comments).Error; err != nil {
 		return nil, err
 	}
-	return comments, nil
+
+	dcomments := make([]dmodels.Comment, len(comments))
+	for i, c := range comments {
+		dcomments[i] = *c.ToDomainComment()
+	}
+
+	return dcomments, nil
 }

@@ -1,6 +1,8 @@
 package repository_test
 
 import (
+	"encoding/json"
+	"math/rand"
 	"strconv"
 	"testing"
 	"time"
@@ -101,3 +103,58 @@ func TestPostRepository_GetFeedNotes_Success(t *testing.T) {
 	}
 	a.Len(posts, 20)
 }
+
+func TestPostRepository_AddCommentToPost_Success(t *testing.T) {
+	tx := db.Begin()
+	t.Cleanup(func() {
+		tx.Rollback()
+	})
+	a := assert.New(t)
+	postRepo := repository.NewPostRepository(tx)
+	authRepo := repository.NewAuthRepository(tx)
+	var userIds []*string
+
+	for i := range 3 {
+		user := &models.User{
+			Username:    "JohnC" + strconv.Itoa(i),
+			Password:    "passwordHash",
+			Email:       "jconnor" + strconv.Itoa(i) + "@mail.com",
+			DisplayName: "John Connor" + strconv.Itoa(i),
+		}
+		UserID, _ := authRepo.Register(user)
+		userIds = append(userIds, UserID)
+	}
+
+	post := &models.Post{
+		Content:    "This is a test post",
+		Visibility: models.Public,
+		Author:     models.User{ID: *userIds[0]},
+	}
+	rpost, _ := postRepo.AddPost(post)
+
+	var commentID *string
+	for i := range 5 {
+		userIdx := rand.Intn(2)
+		comment := &models.Comment{
+			Content:         "this is a comment" + strconv.Itoa(i),
+			Author:          models.User{ID: *userIds[userIdx]},
+			PostID:          rpost.ID,
+			ParentCommentID: commentID,
+		}
+		rcomment, _ := postRepo.AddComment(comment)
+		if rand.Intn(2) == 0 {
+			commentID = &rcomment.ID
+		} else {
+			commentID = nil
+		}
+
+	}
+
+	comments, _ := postRepo.GetCommentsByPostID(rpost.ID)
+
+	jcomments, _ := json.Marshal(comments)
+	print(string(jcomments))
+	a.Len(comments, 5)
+}
+
+func TestPostRepository_AddReactions_Success(t *testing.T) {}
