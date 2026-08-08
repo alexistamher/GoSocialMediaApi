@@ -2,7 +2,9 @@ package repository
 
 import (
 	dmodels "github.com/alexistamher/social-api-go/internal/domain/models"
+	drepository "github.com/alexistamher/social-api-go/internal/domain/repository"
 	"github.com/alexistamher/social-api-go/internal/repository/models"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -11,7 +13,7 @@ type postRepository struct {
 	db *gorm.DB
 }
 
-func NewPostRepository(db *gorm.DB) *postRepository {
+func NewPostRepository(db *gorm.DB) drepository.PostRepository {
 	return &postRepository{db: db}
 }
 
@@ -24,7 +26,7 @@ func (p *postRepository) AddPost(post *dmodels.Post) (*dmodels.Post, error) {
 }
 
 func (p *postRepository) DeletePost(postID string) error {
-	if err := p.db.Where("id = ?", postID).Delete(&dmodels.Post{}).Error; err != nil {
+	if err := p.db.Where("id = ?", postID).Delete(&models.Posts{}).Error; err != nil {
 		return err
 	}
 	return nil
@@ -71,9 +73,7 @@ func (p *postRepository) GetPostByID(postID string) (*dmodels.Post, error) {
 	if err := p.db.Where("id = ?", postID).First(&post).Error; err != nil {
 		return nil, err
 	}
-	// TODO: debería ser llenado con un mapeo
-	var dpost *dmodels.Post
-	return dpost, nil
+	return post.ToDomainPost(), nil
 }
 
 func (p *postRepository) GetPostsByUserID(userID string, offset *int, limit uint) ([]*dmodels.Post, *int, error) {
@@ -110,12 +110,12 @@ func (p *postRepository) GetPostsByUserID(userID string, offset *int, limit uint
 	return dpost, &nextOffset, nil
 }
 
-func (p *postRepository) AddPostReaction(postID string, userID string, reactionType string) (*dmodels.Reaction, error) {
+func (p *postRepository) AddReaction(postID string, userID string, reactionType string, reactionTargetType string) (*dmodels.Reaction, error) {
 	var reaction = models.Reactions{
 		TargetID:           uuid.MustParse(postID),
 		UserID:             uuid.MustParse(userID),
 		ReactionType:       reactionType,
-		ReactionTargetType: string(dmodels.PostType),
+		ReactionTargetType: reactionTargetType,
 	}
 
 	if err := p.db.Create(&reaction).Error; err != nil {
@@ -124,9 +124,9 @@ func (p *postRepository) AddPostReaction(postID string, userID string, reactionT
 	return models.EntityFromReactionDomain(&reaction), nil
 }
 
-func (p *postRepository) DeletePostReaction(postID string) error {
+func (p *postRepository) DeleteReaction(reactionID string) error {
 	var reaction models.Reactions
-	if err := p.db.Where("id = ?", postID).Delete(&reaction).Error; err != nil {
+	if err := p.db.Where("id = ?", reactionID).Delete(&reaction).Error; err != nil {
 		return err
 	}
 	return nil
@@ -165,7 +165,18 @@ func (p *postRepository) AddComment(comment *dmodels.Comment) (*dmodels.Comment,
 }
 
 func (p *postRepository) DeleteComment(commentID string) error {
-	if err := p.db.Where("id = ?", commentID).Delete(&dmodels.Comment{}).Error; err != nil {
+	var children *[]models.Comments
+	if err := p.db.Where("parent_comment_id = ?", commentID).Find(&children).Error; err != nil {
+		return err
+	}
+
+	for _, c := range *children {
+		if err := p.DeleteComment(c.ID.String()); err != nil {
+			return err
+		}
+	}
+
+	if err := p.db.Where("id = ?", commentID).Delete(&models.Comments{}).Error; err != nil {
 		return err
 	}
 	return nil

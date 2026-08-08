@@ -1,7 +1,6 @@
 package repository_test
 
 import (
-	"encoding/json"
 	"math/rand"
 	"strconv"
 	"testing"
@@ -151,9 +150,6 @@ func TestPostRepository_AddCommentToPost_Success(t *testing.T) {
 	}
 
 	comments, _ := postRepo.GetCommentsByPostID(rpost.ID)
-
-	jcomments, _ := json.Marshal(comments)
-	print(string(jcomments))
 	a.Len(comments, 5)
 }
 
@@ -195,7 +191,7 @@ func TestPostRepository_AddPostReactions_Success(t *testing.T) {
 	}
 	for userID := range userIds {
 		reactionIdx := rand.Intn(6)
-		_, _ = postRepo.AddPostReaction(rpost.ID, *userIds[userID], string(reactions[reactionIdx]))
+		_, _ = postRepo.AddReaction(rpost.ID, *userIds[userID], string(reactions[reactionIdx]), string(models.PostType))
 	}
 	postReactions, _ := postRepo.GetTargetReactions(rpost.ID)
 	a.Len(postReactions, 9)
@@ -208,6 +204,151 @@ func TestPostRepository_AddPostReactions_Success(t *testing.T) {
 	a.Equal(prevCounter, len(postReactions))
 }
 
-//TODO: TestPostRepository_RemoveReaction from target (post/comment)
+func TestPostRepository_RemovePostSuccess(t *testing.T) {
+	tx := db.Begin()
+	t.Cleanup(func() {
+		tx.Rollback()
+	})
+	a := assert.New(t)
+	postRepo := repository.NewPostRepository(tx)
+	authRepo := repository.NewAuthRepository(tx)
+	user := &models.User{
+		Username:    "JohnC",
+		Password:    "passwordHash",
+		Email:       "jconnor@mail.com",
+		DisplayName: "John Connor",
+	}
+
+	userId, _ := authRepo.Register(user)
+	post := &models.Post{
+		Content:    "This is a test post",
+		Visibility: models.Public,
+		Author:     models.User{ID: *userId},
+	}
+
+	rpost, _ := postRepo.AddPost(post)
+	posts, _, _ := postRepo.GetPostsByUserID(*userId, nil, uint(1))
+	a.Len(posts, 1)
+	err := postRepo.DeletePost(rpost.ID)
+	a.NoError(err)
+	posts, _, _ = postRepo.GetPostsByUserID(*userId, nil, uint(1))
+	a.Len(posts, 0)
+}
+
+func TestPostRepository_RemoveCommentSuccess(t *testing.T) {
+	tx := db.Begin()
+	t.Cleanup(func() {
+		tx.Rollback()
+	})
+	a := assert.New(t)
+	postRepo := repository.NewPostRepository(tx)
+	authRepo := repository.NewAuthRepository(tx)
+	user := &models.User{
+		Username:    "JohnC",
+		Password:    "passwordHash",
+		Email:       "jconnor@mail.com",
+		DisplayName: "John Connor",
+	}
+
+	userId, _ := authRepo.Register(user)
+	post := &models.Post{
+		Content:    "This is a test post",
+		Visibility: models.Public,
+		Author:     models.User{ID: *userId},
+	}
+	rpost, _ := postRepo.AddPost(post)
+
+	comment := &models.Comment{
+		Content:         "this is a comment",
+		Author:          models.User{ID: *userId},
+		PostID:          rpost.ID,
+		ParentCommentID: nil,
+	}
+	rcomment, _ := postRepo.AddComment(comment)
+
+	comments, _ := postRepo.GetCommentsByPostID(rpost.ID)
+	a.Len(comments, 1)
+	err := postRepo.DeleteComment(rcomment.ID)
+	a.NoError(err)
+	comments, _ = postRepo.GetCommentsByPostID(rpost.ID)
+	a.Len(comments, 0)
+}
+
+func TestPostRepository_RemoveReactionFromTarget(t *testing.T) {
+	tx := db.Begin()
+	t.Cleanup(func() {
+		tx.Rollback()
+	})
+	a := assert.New(t)
+	postRepo := repository.NewPostRepository(tx)
+	authRepo := repository.NewAuthRepository(tx)
+	user := &models.User{
+		Username:    "JohnC",
+		Password:    "passwordHash",
+		Email:       "jconnor@mail.com",
+		DisplayName: "John Connor",
+	}
+
+	userId, _ := authRepo.Register(user)
+	post := &models.Post{
+		Content:    "This is a test post",
+		Visibility: models.Public,
+		Author:     models.User{ID: *userId},
+	}
+	rpost, _ := postRepo.AddPost(post)
+
+	rpostReaction, _ := postRepo.AddReaction(rpost.ID, *userId, string(models.LikeType), string(models.PostType))
+
+	reactions, _ := postRepo.GetTargetReactions(rpost.ID)
+	a.Len(reactions, 1)
+	err := postRepo.DeleteReaction(rpostReaction.ID)
+	a.NoError(err)
+	reactions, _ = postRepo.GetTargetReactions(rpost.ID)
+	a.Len(reactions, 0)
+}
+
+func TestPostRepository_RemoveNestedCommentSuccess(t *testing.T) {
+	tx := db.Begin()
+	t.Cleanup(func() {
+		tx.Rollback()
+	})
+	a := assert.New(t)
+	postRepo := repository.NewPostRepository(tx)
+	authRepo := repository.NewAuthRepository(tx)
+	user := &models.User{
+		Username:    "JohnC",
+		Password:    "passwordHash",
+		Email:       "jconnor@mail.com",
+		DisplayName: "John Connor",
+	}
+
+	userId, _ := authRepo.Register(user)
+	post := &models.Post{
+		Content:    "This is a test post",
+		Visibility: models.Public,
+		Author:     models.User{ID: *userId},
+	}
+	rpost, _ := postRepo.AddPost(post)
+
+	comment := &models.Comment{
+		Content:         "this is a comment",
+		Author:          models.User{ID: *userId},
+		PostID:          rpost.ID,
+		ParentCommentID: nil,
+	}
+	rcomment, err := postRepo.AddComment(comment)
+	a.NoError(err)
+
+	comment.ParentCommentID = &rcomment.ID
+	_, _ = postRepo.AddComment(comment)
+
+	comments, _ := postRepo.GetCommentsByPostID(rpost.ID)
+	a.Len(comments, 2)
+	err = postRepo.DeleteComment(rcomment.ID)
+	a.NoError(err)
+	comments, _ = postRepo.GetCommentsByPostID(rpost.ID)
+	a.Len(comments, 0)
+
+}
 
 //TODO: TestPostRepository_GetPublicNotesFeed: this means return all public friend's posts
