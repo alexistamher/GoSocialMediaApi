@@ -1,8 +1,6 @@
 package repository
 
 import (
-	"log"
-
 	errors "github.com/alexistamher/social-api-go/internal/domain"
 	dmodels "github.com/alexistamher/social-api-go/internal/domain/models"
 	drepository "github.com/alexistamher/social-api-go/internal/domain/repository"
@@ -41,15 +39,10 @@ func (r *authRepository) Register(user *dmodels.User) (*string, error) {
 func (r *authRepository) Login(email string, password string) (*string, error) {
 	var user models.User
 	if ans := r.db.Where("email = ?", email).First(&user); ans.Error != nil {
-		log.Printf("error finding user in: %s", ans.Error)
 		return nil, errors.ErrInvalidCredentials
 	}
 
-	log.Printf("password: %s", password)
-	log.Printf("user: %v", user)
-
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
-		log.Printf("error logging in: %s", err)
 		return nil, errors.ErrInvalidCredentials
 	}
 

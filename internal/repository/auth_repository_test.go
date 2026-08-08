@@ -9,8 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var db = GetTestDB()
-
 func TestAuthRepository_Register_Success(t *testing.T) {
 	tx := db.Begin()
 	defer func() {

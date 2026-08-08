@@ -3,6 +3,7 @@ package models
 import (
 	"time"
 
+	dmodels "github.com/alexistamher/social-api-go/internal/domain/models"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -16,4 +17,38 @@ type Comments struct {
 	PostID          uuid.UUID  `gorm:"column:post_id;type:uuid;not null"`
 	ParentCommentID *uuid.UUID `gorm:"column:parent_comment_id;type:uuid"`
 	CreatedAt       time.Time  `gorm:"column:created_at;not null;default:now()"`
+}
+
+func EntityFromCommentDomain(comment *dmodels.Comment) *Comments {
+	var parentCommentID *uuid.UUID
+	if comment.ParentCommentID != nil {
+		ID := uuid.MustParse(*comment.ParentCommentID)
+		parentCommentID = &ID
+	}
+
+	return &Comments{
+		ID:              uuid.Must(uuid.Parse(comment.ID)),
+		Content:         comment.Content,
+		AuthorID:        uuid.Must(uuid.Parse(comment.Author.ID)),
+		PostID:          uuid.Must(uuid.Parse(comment.PostID)),
+		ParentCommentID: parentCommentID,
+		CreatedAt:       time.Unix(int64(comment.CreatedAt), 0),
+	}
+}
+
+func (c *Comments) ToDomainComment() *dmodels.Comment {
+	var parentCommentID *string
+	if c.ParentCommentID != nil {
+		ID := c.ParentCommentID.String()
+		parentCommentID = &ID
+	}
+
+	return &dmodels.Comment{
+		ID:              c.ID.String(),
+		Content:         c.Content,
+		Author:          dmodels.User{ID: c.AuthorID.String()},
+		PostID:          c.PostID.String(),
+		ParentCommentID: parentCommentID,
+		CreatedAt:       uint64(c.CreatedAt.Unix()),
+	}
 }

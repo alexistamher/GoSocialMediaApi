@@ -5,10 +5,13 @@ import (
 	"log"
 	"path/filepath"
 
+	"github.com/testcontainers/testcontainers-go"
 	cpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
+
+var db = GetTestDB()
 
 func GetTestDB() *gorm.DB {
 	ctx := context.Background()
@@ -24,6 +27,7 @@ func GetTestDB() *gorm.DB {
 		cpostgres.WithDatabase(dbName),
 		cpostgres.WithUsername(dbUser),
 		cpostgres.WithPassword(dbPassword),
+		testcontainers.WithCmd("postgres", "-c", "max_connections=300"),
 		cpostgres.BasicWaitStrategies(),
 	)
 	if err != nil {

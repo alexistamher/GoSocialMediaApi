@@ -3,6 +3,7 @@ package models
 import (
 	"time"
 
+	"github.com/alexistamher/social-api-go/internal/domain/models"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -16,4 +17,34 @@ type Posts struct {
 	CreatedAt    time.Time  `gorm:"column:created_at;not null;default:now()"`
 	AuthorID     uuid.UUID  `gorm:"column:author_id;type:uuid;not null"`
 	PostParentID *uuid.UUID `gorm:"column:post_parent_id;type:uuid"`
+}
+
+func EntityFromPostDomain(p *models.Post) *Posts {
+	var postParentID uuid.UUID
+	if p.PostParent != nil {
+		postParentID = uuid.MustParse(p.PostParent.ID)
+	}
+	return &Posts{
+		Content:      p.Content,
+		Visibility:   string(p.Visibility),
+		AuthorID:     uuid.MustParse(p.Author.ID),
+		PostParentID: &postParentID,
+	}
+}
+
+func (p *Posts) ToDomainPost() *models.Post {
+	var parent *models.Post
+	if p.PostParentID != nil {
+		parent = &models.Post{ID: p.PostParentID.String()}
+	}
+	return &models.Post{
+		ID:               p.ID.String(),
+		Content:          p.Content,
+		Visibility:       models.PostVisibility(p.Visibility),
+		CreatedAt:        uint64(p.CreatedAt.Unix()),
+		Author:           models.User{ID: p.AuthorID.String()},
+		PostParent:       parent,
+		CommentsCount:    0,                             // TODO: esto deberia ser obtenido
+		ReactionsPreview: map[models.ReactionType]int{}, // TODO: esto deberia ser obtenido
+	}
 }
