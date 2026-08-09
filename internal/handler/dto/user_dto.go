@@ -35,3 +35,10 @@ type SearchUsersQuery struct {
 	Limit  int    `form:"limit,default=20" binding:"min=1,max=50"`
 	Offset int    `form:"offset,default=0" binding:"min=0"`
 }
+
+type AuthorResponse struct {
+	ID          string  `json:"id"`
+	Username    string  `json:"username"`
+	DisplayName string  `json:"display_name"`
+	AvatarURL   *string `json:"avatar_url,omitempty"`
+}
