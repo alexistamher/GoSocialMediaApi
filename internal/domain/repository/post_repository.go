@@ -14,4 +14,5 @@ type PostRepository interface {
 	DeleteReaction(reactionID string) error
 	GetTargetReactions(targetID string) ([]*models.Reaction, error)
 	GetTargetPreviewReactions(targetID string) (map[string]int, error)
+	GetCommentsByPostID(postID string) ([]*models.CommentWithAuthor, error)
 }

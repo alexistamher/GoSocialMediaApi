@@ -9,3 +9,13 @@ type Comment struct {
 	PostID          string
 	CreatedAt       uint64
 }
+
+type CommentWithAuthor struct {
+	ID              string
+	Author          *Author
+	ParentCommentID *string
+	Content         string
+	Reactions       map[ReactionType]int
+	PostID          string
+	CreatedAt       uint64
+}

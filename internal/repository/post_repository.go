@@ -181,3 +181,17 @@ func (p *postRepository) GetTargetPreviewReactions(targetID string) (map[string]
 	}
 	return reactionsPreview, nil
 }
+
+func (p *postRepository) GetCommentsByPostID(postID string) ([]*dmodels.CommentWithAuthor, error) {
+	var comments []models.CommentsWithAuthor
+	if err := p.db.Preload("Author").Where("post_id = ? and parent_comment_id is null", postID).Find(&comments).Error; err != nil {
+		return nil, err
+	}
+
+	dcomments := make([]*dmodels.CommentWithAuthor, len(comments))
+	for i, c := range comments {
+		dcomments[i] = c.ToDomainCommentWithAuthor()
+	}
+
+	return dcomments, nil
+}

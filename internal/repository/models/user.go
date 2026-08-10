@@ -53,3 +53,12 @@ func (u *User) ToDomainUser() *dmodels.User {
 		AvatarURL:   u.AvatarURL,
 	}
 }
+
+func (u *User) ToDomainAuthor() *dmodels.Author {
+	return &dmodels.Author{
+		ID:          u.ID.String(),
+		Username:    u.Username,
+		DisplayName: u.DisplayName,
+		AvatarURL:   u.AvatarURL,
+	}
+}

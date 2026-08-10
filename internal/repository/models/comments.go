@@ -17,13 +17,21 @@ type Comments struct {
 	PostID          uuid.UUID  `gorm:"column:post_id;type:uuid;not null"`
 	ParentCommentID *uuid.UUID `gorm:"column:parent_comment_id;type:uuid"`
 	CreatedAt       time.Time  `gorm:"column:created_at;not null;default:now()"`
-
-	Children []*Comments `gorm:"foreignKey:ParentCommentID;references:ID;constraint:OnDelete:CASCADE"`
 }
 
-type CommentWithDetails struct {
-	Comments
-	Author Authors `gorm:"foreignKey:AuthorID;references:ID"`
+type CommentsWithAuthor struct {
+	ID              uuid.UUID  `gorm:"column:id;type:uuid;primaryKey;default:gen_random_uuid();not null"`
+	Content         string     `gorm:"column:content;not null"`
+	AuthorID        uuid.UUID  `gorm:"column:author_id;type:uuid;not null"`
+	PostID          uuid.UUID  `gorm:"column:post_id;type:uuid;not null"`
+	ParentCommentID *uuid.UUID `gorm:"column:parent_comment_id;type:uuid"`
+	CreatedAt       time.Time  `gorm:"column:created_at;not null;default:now()"`
+
+	Author User `gorm:"foreignKey:AuthorID;references:ID"`
+}
+
+func (CommentsWithAuthor) TableName() string {
+	return "comments"
 }
 
 func EntityFromCommentDomain(comment *dmodels.Comment) *Comments {
@@ -34,7 +42,6 @@ func EntityFromCommentDomain(comment *dmodels.Comment) *Comments {
 	}
 
 	return &Comments{
-		Content:         comment.Content,
 		AuthorID:        uuid.MustParse(comment.Author.ID),
 		PostID:          uuid.MustParse(comment.PostID),
 		ParentCommentID: parentCommentID,
@@ -53,6 +60,23 @@ func (c *Comments) ToDomainComment() *dmodels.Comment {
 		ID:              c.ID.String(),
 		Content:         c.Content,
 		Author:          dmodels.User{ID: c.AuthorID.String()},
+		PostID:          c.PostID.String(),
+		ParentCommentID: parentCommentID,
+		CreatedAt:       uint64(c.CreatedAt.Unix()),
+	}
+}
+
+func (c *CommentsWithAuthor) ToDomainCommentWithAuthor() *dmodels.CommentWithAuthor {
+	var parentCommentID *string
+	if c.ParentCommentID != nil {
+		ID := c.ParentCommentID.String()
+		parentCommentID = &ID
+	}
+
+	return &dmodels.CommentWithAuthor{
+		ID:              c.ID.String(),
+		Content:         c.Content,
+		Author:          c.Author.ToDomainAuthor(),
 		PostID:          c.PostID.String(),
 		ParentCommentID: parentCommentID,
 		CreatedAt:       uint64(c.CreatedAt.Unix()),

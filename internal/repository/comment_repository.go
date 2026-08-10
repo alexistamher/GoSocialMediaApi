@@ -71,15 +71,15 @@ func (p *commentRepository) DeleteComment(commentID string) error {
 	})
 }
 
-func (p *commentRepository) GetCommentsByPostID(postID string) ([]dmodels.Comment, error) {
-	var comments []models.Comments
-	if err := p.db.Where("post_id = ?", postID).Find(&comments).Error; err != nil {
+func (p *commentRepository) GetCommentsByCommentID(commentID string) ([]*dmodels.CommentWithAuthor, error) {
+	var comments []models.CommentsWithAuthor
+	if err := p.db.Preload("Author").Where("parent_comment_id = ?", commentID).Find(&comments).Error; err != nil {
 		return nil, err
 	}
 
-	dcomments := make([]dmodels.Comment, len(comments))
+	dcomments := make([]*dmodels.CommentWithAuthor, len(comments))
 	for i, c := range comments {
-		dcomments[i] = *c.ToDomainComment()
+		dcomments[i] = c.ToDomainCommentWithAuthor()
 	}
 
 	return dcomments, nil
