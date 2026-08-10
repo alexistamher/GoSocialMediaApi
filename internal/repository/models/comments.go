@@ -59,7 +59,7 @@ func (c *Comments) ToDomainComment() *dmodels.Comment {
 	return &dmodels.Comment{
 		ID:              c.ID.String(),
 		Content:         c.Content,
-		Author:          dmodels.User{ID: c.AuthorID.String()},
+		Author:          dmodels.Author{ID: c.AuthorID.String()},
 		PostID:          c.PostID.String(),
 		ParentCommentID: parentCommentID,
 		CreatedAt:       uint64(c.CreatedAt.Unix()),

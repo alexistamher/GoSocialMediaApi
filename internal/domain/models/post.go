@@ -10,9 +10,9 @@ const (
 type Post struct {
 	ID               string
 	Content          string
-	Author           User
+	Author           Author
 	CommentsCount    int
-	ReactionsPreview map[ReactionType]int
+	PreviewReactions map[string]int
 	Visibility       PostVisibility
 	PostParent       *Post
 	CreatedAt        uint64

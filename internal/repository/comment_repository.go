@@ -73,7 +73,8 @@ func (p *commentRepository) DeleteComment(commentID string) error {
 
 func (p *commentRepository) GetCommentsByCommentID(commentID string) ([]*dmodels.CommentWithAuthor, error) {
 	var comments []models.CommentsWithAuthor
-	if err := p.db.Preload("Author").Where("parent_comment_id = ?", commentID).Find(&comments).Error; err != nil {
+	if err := p.db.Preload("Author").
+		Where("parent_comment_id = ?", commentID).Find(&comments).Error; err != nil {
 		return nil, err
 	}
 

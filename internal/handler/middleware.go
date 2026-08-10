@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -29,7 +28,6 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
-			log.Println("*_*: primero")
 			err, _ := json.Marshal(map[string]any{
 				"error": "invalid token format",
 			})
@@ -42,12 +40,6 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		claims, err := auth.ValidateToken(parts[1])
 		if err != nil {
-			// err, _ := json.Marshal(map[string]any{
-			// 	"error": err.Error(),
-			// })
-			log.Printf("*_*: segundon: %v", err)
-			// ctx.Writer.Header().Add("Content-Type", "application/json")
-			// ctx.Writer.Write(err)
 			ctx.AbortWithError(http.StatusUnauthorized, err)
 			return
 		}

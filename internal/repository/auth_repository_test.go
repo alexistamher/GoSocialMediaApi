@@ -47,7 +47,6 @@ func TestAuthRepository_Login_Success(t *testing.T) {
 	}
 
 	ID, _ := r.Register(user)
-	log.Printf("pass: %s", user.Password)
 
 	ruser, err := r.Login(user.Email, user.Password)
 	if err != nil {

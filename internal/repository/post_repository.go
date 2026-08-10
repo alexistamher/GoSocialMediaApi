@@ -19,7 +19,7 @@ func NewPostRepository(db *gorm.DB) drepository.PostRepository {
 
 func (p *postRepository) AddPost(post *dmodels.Post) (*dmodels.Post, error) {
 	postEntity := models.EntityFromPostDomain(post)
-	if err := p.db.Create(&postEntity).Error; err != nil {
+	if err := p.db.Preload("Author").Create(&postEntity).Error; err != nil {
 		return nil, err
 	}
 	return postEntity.ToDomainPost(), nil
@@ -59,14 +59,22 @@ func (p *postRepository) DeletePost(postID string) error {
 }
 
 func (p *postRepository) GetAllPosts(userID string, offset *int, limit *int) ([]*dmodels.Post, *int, error) {
+	var postIDs []string
 	var posts []*models.Posts
-	var total int64
+	// var total int64
 
-	baseQuery := p.db.Model(&models.Posts{}).Where("author_id = ?", userID)
-
-	if err := baseQuery.Count(&total).Error; err != nil {
+	if err := p.db.Table("posts").
+		Select("id").
+		Where("author_id = ?", userID).
+		Pluck("id", &postIDs).Error; err != nil {
 		return nil, nil, err
 	}
+
+	baseQuery := p.db.Preload("Author").Where("id IN ?", postIDs)
+
+	// if err := baseQuery.Table("posts").Count(&total).Error; err != nil {
+	// 	return nil, nil, err
+	// }
 
 	query := baseQuery.Order("created_at desc")
 	if offset != nil {
@@ -80,9 +88,16 @@ func (p *postRepository) GetAllPosts(userID string, offset *int, limit *int) ([]
 		return nil, nil, err
 	}
 
-	dpost := make([]*dmodels.Post, len(posts))
+	reactions, err := getPreviewReactionsByIDs(p.db, postIDs)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	dposts := make([]*dmodels.Post, len(posts))
 	for i, post := range posts {
-		dpost[i] = post.ToDomainPost()
+		dpost := post.ToDomainPost()
+		dpost.PreviewReactions = reactions[post.ID.String()]
+		dposts[i] = dpost
 	}
 
 	currentOffset := 0
@@ -91,7 +106,7 @@ func (p *postRepository) GetAllPosts(userID string, offset *int, limit *int) ([]
 	}
 	nextOffset := currentOffset + len(posts)
 
-	return dpost, &nextOffset, nil
+	return dposts, &nextOffset, nil
 }
 
 func (p *postRepository) GetPostByID(postID string) (*dmodels.Post, error) {
@@ -170,9 +185,11 @@ func (p *postRepository) GetTargetReactions(targetID string) ([]*dmodels.Reactio
 	return dreactions, nil
 }
 
-func (p *postRepository) GetTargetPreviewReactions(targetID string) (map[string]int, error) {
+func getTargetPreviewReactions(tx *gorm.DB, targetID string) (map[string]int, error) {
 	var reactions []models.Reactions
-	if err := p.db.Where("target_id = ?", targetID).Find(&reactions).Error; err != nil {
+	if err := tx.
+		Where("target_id = ?", targetID).
+		Select("reaction_type", "target_type").Find(&reactions).Error; err != nil {
 		return nil, err
 	}
 	reactionsPreview := make(map[string]int)
@@ -182,16 +199,55 @@ func (p *postRepository) GetTargetPreviewReactions(targetID string) (map[string]
 	return reactionsPreview, nil
 }
 
+func (p *postRepository) GetTargetPreviewReactions(targetID string) (map[string]int, error) {
+	return getTargetPreviewReactions(p.db, targetID)
+}
+
 func (p *postRepository) GetCommentsByPostID(postID string) ([]*dmodels.CommentWithAuthor, error) {
+	var commentIds []string
+	if err := p.db.Model(&models.Comments{}).
+		Where("post_id = ? and parent_comment_id is null", postID).
+		Pluck("id", &commentIds).
+		Find(&models.Comments{}).Error; err != nil {
+		return nil, err
+	}
+
 	var comments []models.CommentsWithAuthor
-	if err := p.db.Preload("Author").Where("post_id = ? and parent_comment_id is null", postID).Find(&comments).Error; err != nil {
+	if err := p.db.Preload("Author").Where("id in ?", commentIds).
+		Find(&comments).Error; err != nil {
+		return nil, err
+	}
+
+	reactions, err := getPreviewReactionsByIDs(p.db, commentIds)
+	if err != nil {
 		return nil, err
 	}
 
 	dcomments := make([]*dmodels.CommentWithAuthor, len(comments))
 	for i, c := range comments {
-		dcomments[i] = c.ToDomainCommentWithAuthor()
+		comment := c.ToDomainCommentWithAuthor()
+		comment.PreviewReactions = reactions[c.ID.String()]
+		dcomments[i] = comment
 	}
 
 	return dcomments, nil
+}
+
+func getPreviewReactionsByIDs(db *gorm.DB, targetIDs []string) (map[string]map[string]int, error) {
+	reactionx := make(map[string]map[string]int)
+	var reactions []models.Reactions
+	if err := db.Where("target_id IN ?", targetIDs).Find(&reactions).Error; err != nil {
+		return nil, err
+	}
+
+	for _, reaction := range reactions {
+		if _, ok := reactionx[reaction.TargetID.String()]; !ok {
+			reactionx[reaction.TargetID.String()] = map[string]int{
+				reaction.ReactionType: 1,
+			}
+		} else {
+			reactionx[reaction.TargetID.String()][reaction.ReactionType]++
+		}
+	}
+	return reactionx, nil
 }

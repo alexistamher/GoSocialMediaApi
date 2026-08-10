@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"net/http"
-
 	errors "github.com/alexistamher/social-api-go/internal/domain"
 	"github.com/alexistamher/social-api-go/internal/handler/dto"
 	"github.com/alexistamher/social-api-go/internal/service"
@@ -24,13 +22,10 @@ func (h *ReactionHandler) AddReaction(c *gin.Context) {
 		return
 	}
 
-	res, err := h.reactionService.AddReaction(c.Request.Context(), req)
-	if err != nil {
+	if err := h.reactionService.AddReaction(c, req); err != nil {
 		respondError(c, errors.ErrInternalServerError)
 		return
 	}
-
-	c.JSON(http.StatusCreated, res)
 }
 
 func (h *ReactionHandler) DeleteReaction(c *gin.Context) {
@@ -40,12 +35,11 @@ func (h *ReactionHandler) DeleteReaction(c *gin.Context) {
 		return
 	}
 
-	err := h.reactionService.DeleteReaction(c.Request.Context(), reactionID)
+	err := h.reactionService.DeleteReaction(c, reactionID)
 	if err != nil {
 		respondError(c, errors.ErrInternalServerError)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Reaction deleted successfully"})
 }
 
 func (h *ReactionHandler) UpdateReaction(c *gin.Context) {
@@ -55,36 +49,25 @@ func (h *ReactionHandler) UpdateReaction(c *gin.Context) {
 		return
 	}
 
-	err := h.reactionService.UpdateReaction(c.Request.Context(), req)
+	err := h.reactionService.UpdateReaction(c, req)
 	if err != nil {
 		respondError(c, errors.ErrInternalServerError)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Reaction updated successfully"})
 }
 
 func (h *ReactionHandler) GetTargetReactions(c *gin.Context) {
-	userID := c.Value("user_id").(string)
-	reactions, err := h.reactionService.GetTargetReactions(c.Request.Context(), userID)
-	if err != nil {
-		respondError(c, errors.ErrInternalServerError)
-		return
-	}
-	c.JSON(http.StatusOK, reactions)
-}
-
-func (h *ReactionHandler) GetTargetPreviewReactions(c *gin.Context) {
-	postId := c.Param("post_id")
-	if postId == "" {
+	var req dto.GetTargetReactionsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		respondError(c, errors.ErrBadRequest)
 		return
 	}
-	reactions, err := h.reactionService.GetTargetPreviewReactions(c.Request.Context(), postId)
+
+	err := h.reactionService.GetTargetReactions(c, req)
 	if err != nil {
 		respondError(c, errors.ErrInternalServerError)
 		return
 	}
-	c.JSON(http.StatusOK, reactions)
 }
 
 func (h *ReactionHandler) AddTargetReaction(c *gin.Context) {
@@ -93,10 +76,9 @@ func (h *ReactionHandler) AddTargetReaction(c *gin.Context) {
 		respondError(c, errors.ErrBadRequest)
 		return
 	}
-	rreaction, err := h.reactionService.AddReaction(c.Request.Context(), req)
+	err := h.reactionService.AddReaction(c, req)
 	if err != nil {
 		respondError(c, errors.ErrInternalServerError)
 		return
 	}
-	c.JSON(http.StatusOK, rreaction)
 }

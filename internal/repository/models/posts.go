@@ -19,21 +19,8 @@ type Posts struct {
 	PostParentID *uuid.UUID `gorm:"column:post_parent_id;type:uuid"`
 
 	CommentChildren []*Comments `gorm:"foreignKey:PostID;references:ID;constraint:OnDelete:CASCADE"`
+	Author          User        `gorm:"foreignKey:AuthorID;references:ID"`
 }
-
-// func (p *Posts) AfterDelete(tx *gorm.DB) (err error) {
-// 	var post Posts
-// 	tx.Unscoped().Last(&post)
-
-// 	if err = tx.Where("post_id = ?", post.ID).Delete(&Comments{}).Error; err != nil {
-// 		return err
-// 	}
-
-// 	if err = tx.Where("target_id = ?", post.ID).Delete(&Reactions{}).Error; err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
 
 func EntityFromPostDomain(p *models.Post) *Posts {
 	var postParentID uuid.UUID
@@ -53,14 +40,21 @@ func (p *Posts) ToDomainPost() *models.Post {
 	if p.PostParentID != nil {
 		parent = &models.Post{ID: p.PostParentID.String()}
 	}
+	var author models.Author
+	if p.Author.ID != uuid.Nil {
+		author = *p.Author.ToDomainAuthor()
+	} else {
+		author = models.Author{ID: p.AuthorID.String()}
+	}
+
 	return &models.Post{
 		ID:               p.ID.String(),
 		Content:          p.Content,
 		Visibility:       models.PostVisibility(p.Visibility),
 		CreatedAt:        uint64(p.CreatedAt.Unix()),
-		Author:           models.User{ID: p.AuthorID.String()},
+		Author:           author,
 		PostParent:       parent,
-		CommentsCount:    0,                             // TODO: esto deberia ser obtenido
-		ReactionsPreview: map[models.ReactionType]int{}, // TODO: esto deberia ser obtenido
+		CommentsCount:    0,                // TODO: esto deberia ser obtenido
+		PreviewReactions: map[string]int{}, // TODO: esto deberia ser obtenido
 	}
 }

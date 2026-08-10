@@ -2,6 +2,7 @@ package repository_test
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"path/filepath"
 
@@ -11,9 +12,9 @@ import (
 	"gorm.io/gorm"
 )
 
-var db = GetTestDB()
+var db, ctr = GetTestDB()
 
-func GetTestDB() *gorm.DB {
+func GetTestDB() (*gorm.DB, testcontainers.Container) {
 	ctx := context.Background()
 
 	dbName := "postgres"
@@ -46,5 +47,10 @@ func GetTestDB() *gorm.DB {
 
 	log.Println("success database connection")
 
-	return db
+	return db, ctr
+}
+
+func printJson(data any) {
+	res, _ := json.MarshalIndent(data, "\t", "\t")
+	log.Printf("json: %s", string(res))
 }

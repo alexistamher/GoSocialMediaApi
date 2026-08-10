@@ -1,7 +1,6 @@
 package repository_test
 
 import (
-	"log"
 	"math/rand"
 	"strconv"
 	"testing"
@@ -33,14 +32,15 @@ func TestPostRespository_AddPost_Success(t *testing.T) {
 	post := &models.Post{
 		Content:    "this is a post test",
 		Visibility: "public",
-		Author:     models.User{ID: *UserID},
+		Author:     models.Author{ID: *UserID},
 	}
 
 	rpost, _ := postRepo.AddPost(post)
+	printJson(rpost)
 	post = &models.Post{
 		Content:    "this is a post test with parent",
 		Visibility: models.Friends,
-		Author:     models.User{ID: *UserID},
+		Author:     models.Author{ID: *UserID},
 		PostParent: rpost,
 	}
 	_, _ = postRepo.AddPost(post)
@@ -77,7 +77,7 @@ func TestPostRepository_GetFeedNotes_Success(t *testing.T) {
 		post := &models.Post{
 			Content:    "post #" + strconv.Itoa(i),
 			Visibility: models.Public,
-			Author:     models.User{ID: *UserID},
+			Author:     models.Author{ID: *UserID},
 		}
 		_, _ = postRepo.AddPost(post)
 	}
@@ -128,7 +128,7 @@ func TestPostRepository_AddPostReactions_Success(t *testing.T) {
 	post := &models.Post{
 		Content:    "This is a test post",
 		Visibility: models.Public,
-		Author:     models.User{ID: *userIds[0]},
+		Author:     models.Author{ID: *userIds[0]},
 	}
 	rpost, _ := postRepo.AddPost(post)
 
@@ -142,9 +142,7 @@ func TestPostRepository_AddPostReactions_Success(t *testing.T) {
 	}
 	for userID := range userIds {
 		reactionIdx := rand.Intn(6)
-		log.Printf("adding reaction: user=%s, reaction=%s, post=%s", *userIds[userID], string(reactions[reactionIdx]), rpost.ID)
 		_, _ = postRepo.AddReaction(rpost.ID, *userIds[userID], string(reactions[reactionIdx]), string(models.PostType))
-		// a.NoError(err)
 	}
 	postReactions, _ := postRepo.GetTargetReactions(rpost.ID)
 	a.Len(postReactions, 9)
@@ -176,7 +174,7 @@ func TestPostRepository_RemovePostSuccess(t *testing.T) {
 	post := &models.Post{
 		Content:    "This is a test post",
 		Visibility: models.Public,
-		Author:     models.User{ID: *userId},
+		Author:     models.Author{ID: *userId},
 	}
 
 	rpost, _ := postRepo.AddPost(post)
@@ -207,7 +205,7 @@ func TestPostRepository_RemoveReactionFromTarget(t *testing.T) {
 	post := &models.Post{
 		Content:    "This is a test post",
 		Visibility: models.Public,
-		Author:     models.User{ID: *userId},
+		Author:     models.Author{ID: *userId},
 	}
 	rpost, _ := postRepo.AddPost(post)
 
@@ -246,7 +244,7 @@ func TestPostRepository_RemovePostAlongWithCommentsAndReactions_Success(t *testi
 	post := &models.Post{
 		Content:    "This is a test post",
 		Visibility: models.Public,
-		Author:     models.User{ID: *userIds[0]},
+		Author:     models.Author{ID: *userIds[0]},
 	}
 	rpost, _ := postRepo.AddPost(post)
 	comments, _ := postRepo.GetCommentsByPostID(rpost.ID)
@@ -254,7 +252,7 @@ func TestPostRepository_RemovePostAlongWithCommentsAndReactions_Success(t *testi
 
 	comment := &models.Comment{
 		Content:         "this is a comment",
-		Author:          models.User{ID: *userIds[1]},
+		Author:          models.Author{ID: *userIds[1]},
 		PostID:          rpost.ID,
 		ParentCommentID: nil,
 	}
@@ -281,7 +279,70 @@ func TestPostRepository_RemovePostAlongWithCommentsAndReactions_Success(t *testi
 	a.Len(reactions, 0)
 
 	comments, _ = postRepo.GetCommentsByPostID(rpost.ID)
-	a.Len(comments, 1)
+	a.Len(comments, 0)
+}
+
+func TestPostRepository_GetDetailedPosts(t *testing.T) {
+	tx := db.Begin()
+	t.Cleanup(func() {
+		tx.Rollback()
+	})
+	a := assert.New(t)
+	postRepo := repository.NewPostRepository(tx)
+	cmntRepo := repository.NewCommentRepository(tx)
+	authRepo := repository.NewAuthRepository(tx)
+
+	usedIDs := make([]string, 10)
+
+	for i := range 10 {
+		user := &models.User{
+			Username:    "JohnC" + strconv.Itoa(i),
+			Password:    "passwordHash",
+			Email:       "jconnor" + strconv.Itoa(i) + "@mail.com",
+			DisplayName: "John Connor" + strconv.Itoa(i),
+		}
+		userId, _ := authRepo.Register(user)
+		usedIDs[i] = *userId
+	}
+
+	post := &models.Post{
+		Content:    "This is a test post",
+		Visibility: models.Public,
+		Author:     models.Author{ID: usedIDs[0]},
+	}
+	rpost, _ := postRepo.AddPost(post)
+
+	for range 2 {
+		comment := &models.Comment{
+			Content:         "this is a comment",
+			Author:          models.Author{ID: usedIDs[0]},
+			PostID:          rpost.ID,
+			ParentCommentID: nil,
+		}
+		cmntRepo.AddComment(comment)
+	}
+
+	reactions := []models.ReactionType{
+		models.LikeType,
+		models.LoveType,
+		models.HahaType,
+		models.WowType,
+		models.SadType,
+		models.AngryType,
+	}
+	for _, userID := range usedIDs {
+		reaction := reactions[rand.Intn(len(reactions))]
+		_, err := postRepo.AddReaction(rpost.ID, userID, string(reaction), string(models.PostType))
+		a.NoError(err)
+	}
+
+	offset := int(0)
+	limit := int(20)
+	posts, _, _ := postRepo.GetAllPosts(usedIDs[0], &offset, &limit)
+
+	post = posts[0]
+	a.Equal(post.Author.ID, usedIDs[0])
+
 }
 
 //TODO: TestPostRepository_GetPublicNotesFeed: this means return all public friend's posts

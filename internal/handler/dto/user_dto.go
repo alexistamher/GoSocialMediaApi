@@ -43,7 +43,7 @@ type AuthorResponse struct {
 	AvatarURL   *string `json:"avatar_url,omitempty"`
 }
 
-func ResponseFromDomainAuthor(a *models.User) *AuthorResponse {
+func ResponseFromDomainAuthor(a *models.Author) *AuthorResponse {
 	return &AuthorResponse{
 		ID:          a.ID,
 		Username:    a.Username,

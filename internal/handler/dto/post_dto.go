@@ -26,12 +26,10 @@ type PostResponse struct {
 
 func (r *CreatePostRequest) ToDomainPost() *models.Post {
 	return &models.Post{
-		Content:          r.Content,
-		Visibility:       models.PostVisibility(r.Visibility),
-		Author:           models.User{ID: r.UserID},
-		PostParent:       &models.Post{ID: *r.ParentID},
-		ReactionsPreview: map[models.ReactionType]int{},
-		CommentsCount:    0,
+		Content:    r.Content,
+		Visibility: models.PostVisibility(r.Visibility),
+		Author:     models.Author{ID: r.UserID},
+		PostParent: &models.Post{ID: *r.ParentID},
 	}
 }
 
