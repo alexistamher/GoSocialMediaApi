@@ -24,13 +24,11 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 		return
 	}
 
-	res, err := h.postService.CreatePost(c.Request.Context(), req)
-	if err != nil {
+	req.UserID = c.Value(UserIDKey).(string)
+	if err := h.postService.CreatePost(c, req); err != nil {
 		respondError(c, err)
 		return
 	}
-
-	c.JSON(http.StatusCreated, res)
 }
 
 func (h *PostHandler) GetPostByID(c *gin.Context) {
@@ -39,12 +37,11 @@ func (h *PostHandler) GetPostByID(c *gin.Context) {
 		respondError(c, errors.ErrBadRequest)
 		return
 	}
-	res, err := h.postService.GetPostByID(c.Request.Context(), postID)
-	if err != nil {
+
+	if err := h.postService.GetPostByID(c, postID); err != nil {
 		respondError(c, errors.ErrInternalServerError)
 		return
 	}
-	c.JSON(http.StatusOK, res)
 }
 
 func (h *PostHandler) DeletePost(c *gin.Context) {
@@ -54,12 +51,10 @@ func (h *PostHandler) DeletePost(c *gin.Context) {
 		return
 	}
 
-	err := h.postService.DeletePost(c.Request.Context(), postID)
-	if err != nil {
+	if err := h.postService.DeletePost(c, postID); err != nil {
 		respondError(c, errors.ErrInternalServerError)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Post deleted successfully"})
 }
 
 func (h *PostHandler) GetUserPosts(c *gin.Context) {
@@ -68,10 +63,9 @@ func (h *PostHandler) GetUserPosts(c *gin.Context) {
 		respondError(c, errors.ErrBadRequest)
 		return
 	}
-	posts, err := h.postService.GetUserPosts(c.Request.Context(), userID)
-	if err != nil {
+
+	if err := h.postService.GetUserPosts(c, userID); err != nil {
 		respondError(c, errors.ErrInternalServerError)
 		return
 	}
-	c.JSON(http.StatusOK, posts)
 }

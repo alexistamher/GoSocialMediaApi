@@ -1,9 +1,12 @@
 package dto
 
+import "github.com/alexistamher/social-api-go/internal/domain/models"
+
 type CreatePostRequest struct {
 	Content    string  `json:"content" binding:"required,min=1,max=2000"`
 	ParentID   *string `json:"parent_id"`
 	Visibility string  `json:"visibility" binding:"required,oneof=friends public"`
+	UserID     string
 }
 
 type CreatedPostResponse struct {
@@ -14,10 +17,32 @@ type CreatedPostResponse struct {
 type PostResponse struct {
 	ID               string         `json:"id"`
 	Content          string         `json:"content"`
-	Author           AuthResponse   `json:"author"`
+	Author           AuthorResponse `json:"author"`
 	CommentsCount    int            `json:"comments_count"`
 	ReactionsPreview map[string]int `json:"reactions"`
 	Visibility       string         `json:"visibility" binding:"oneof=friends public"`
 	CreatedAt        uint64         `json:"created_at"`
-	PostParentID     *string        `json:"post_parent_id" binding:"uuid"`
+}
+
+func (r *CreatePostRequest) ToDomainPost() *models.Post {
+	return &models.Post{
+		Content:          r.Content,
+		Visibility:       models.PostVisibility(r.Visibility),
+		Author:           models.User{ID: r.UserID},
+		PostParent:       &models.Post{ID: *r.ParentID},
+		ReactionsPreview: map[models.ReactionType]int{},
+		CommentsCount:    0,
+	}
+}
+
+func ResponseFromDomainPost(p *models.Post) *PostResponse {
+	return &PostResponse{
+		ID:               p.ID,
+		Content:          p.Content,
+		Author:           *ResponseFromDomainAuthor(&p.Author),
+		CommentsCount:    p.CommentsCount,
+		ReactionsPreview: map[string]int{},
+		Visibility:       string(p.Visibility),
+		CreatedAt:        p.CreatedAt,
+	}
 }

@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"net/http"
-
 	errors "github.com/alexistamher/social-api-go/internal/domain"
 	"github.com/alexistamher/social-api-go/internal/handler/dto"
 	"github.com/alexistamher/social-api-go/internal/service"
@@ -24,13 +22,10 @@ func (h *CommentHandler) AddComment(c *gin.Context) {
 		return
 	}
 
-	comment, err := h.commentService.AddComment(req)
-	if err != nil {
+	if err := h.commentService.AddComment(c, req); err != nil {
 		respondError(c, err)
 		return
 	}
-
-	c.JSON(http.StatusOK, comment)
 }
 
 func (h *CommentHandler) DeleteComment(c *gin.Context) {
@@ -40,27 +35,21 @@ func (h *CommentHandler) DeleteComment(c *gin.Context) {
 		return
 	}
 
-	err := h.commentService.DeleteComment(commentID)
-	if err != nil {
+	if err := h.commentService.DeleteComment(c, commentID); err != nil {
 		respondError(c, err)
 		return
 	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Comment deleted successfully"})
 }
 
 func (h *CommentHandler) GetComments(c *gin.Context) {
-	postID := c.Param("post_id")
-	if postID == "" {
+	commentID := c.Param("comment_id")
+	if commentID == "" {
 		respondError(c, errors.ErrBadRequest)
 		return
 	}
 
-	comments, err := h.commentService.GetPostComments(postID)
-	if err != nil {
+	if err := h.commentService.GetCommentsByCommentID(c, commentID); err != nil {
 		respondError(c, err)
 		return
 	}
-
-	c.JSON(http.StatusOK, comments)
 }

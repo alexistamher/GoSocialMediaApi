@@ -1,5 +1,7 @@
 package dto
 
+import dmodels "github.com/alexistamher/social-api-go/internal/domain/models"
+
 type AddCommentRequest struct {
 	Content         string  `json:"content" binding:"required,min=1,max=1000"`
 	ParentCommentID *string `json:"parent_comment_id,omitempty" binding:"omitempty,uuid"`
@@ -12,9 +14,28 @@ type CreatedCommentResponse struct {
 type CommentResponse struct {
 	ID               string         `json:"id"`
 	Content          string         `json:"content"`
-	Author           AuthResponse   `json:"author"`
+	Author           AuthorResponse `json:"author"`
 	ReactionsPreview map[string]int `json:"reactions"`
 	CreatedAt        uint64         `json:"created_at"`
 	PostID           string         `json:"post_id"`
 	ParentCommentID  *string        `json:"parent_comment_id"`
+}
+
+func (c *AddCommentRequest) ToDomainComment() *dmodels.Comment {
+	return &dmodels.Comment{
+		Content:         c.Content,
+		ParentCommentID: c.ParentCommentID,
+	}
+}
+
+func ResponseFromDomainComment(c *dmodels.Comment) *CommentResponse {
+	return &CommentResponse{
+		ID:               c.ID,
+		Content:          c.Content,
+		Author:           *ResponseFromDomainAuthor(&c.Author),
+		ReactionsPreview: map[string]int{}, // TODO: falta obtener los datos de la base de datos
+		CreatedAt:        c.CreatedAt,
+		PostID:           c.PostID,
+		ParentCommentID:  c.ParentCommentID,
+	}
 }
