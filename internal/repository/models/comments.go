@@ -17,12 +17,19 @@ type Comments struct {
 	PostID          uuid.UUID  `gorm:"column:post_id;type:uuid;not null"`
 	ParentCommentID *uuid.UUID `gorm:"column:parent_comment_id;type:uuid"`
 	CreatedAt       time.Time  `gorm:"column:created_at;not null;default:now()"`
+
+	Children []*Comments `gorm:"foreignKey:ParentCommentID;references:ID;constraint:OnDelete:CASCADE"`
+}
+
+type CommentWithDetails struct {
+	Comments
+	Author Authors `gorm:"foreignKey:AuthorID;references:ID"`
 }
 
 func EntityFromCommentDomain(comment *dmodels.Comment) *Comments {
 	var parentCommentID *uuid.UUID
 	if comment.ParentCommentID != nil {
-		ID := uuid.MustParse(*comment.ParentCommentID)
+		ID, _ := uuid.Parse(*comment.ParentCommentID)
 		parentCommentID = &ID
 	}
 

@@ -20,6 +20,13 @@ type User struct {
 	UpdatedAt    time.Time `gorm:"column:updated_at;not null;default:now()"`
 }
 
+type Authors struct {
+	ID          string `gorm:"column:id;type:uuid;primaryKey;default:gen_random_uuid();not null"`
+	Username    string `gorm:"column:username;not null"`
+	DisplayName string `gorm:"column:display_name;not null"`
+	AvatarURL   string `gorm:"column:avatar_url"`
+}
+
 func (u *User) BeforeCreate(tx *gorm.DB) error {
 	u.ID = uuid.New()
 	return nil

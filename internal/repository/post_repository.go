@@ -26,7 +26,33 @@ func (p *postRepository) AddPost(post *dmodels.Post) (*dmodels.Post, error) {
 }
 
 func (p *postRepository) DeletePost(postID string) error {
-	if err := p.db.Where("id = ?", postID).Delete(&models.Posts{}).Error; err != nil {
+	if err := p.db.Transaction(func(tx *gorm.DB) error {
+		var commentIds []string
+		if err := tx.Model(&models.Comments{}).
+			Where("post_id = ?", postID).
+			Pluck("id", &commentIds).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Where("target_id = ? AND target_type = 'post'", postID).
+			Delete(&models.Reactions{}).Error; err != nil {
+			return err
+		}
+
+		if len(commentIds) > 0 {
+			for _, id := range commentIds {
+				if err := deleteCommentAndChildren(tx, id); err != nil {
+					return err
+				}
+			}
+		}
+
+		if err := tx.Where("id = ?", postID).
+			Delete(&models.Posts{}).Error; err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
 		return err
 	}
 	return nil
@@ -154,44 +180,4 @@ func (p *postRepository) GetTargetPreviewReactions(targetID string) (map[string]
 		reactionsPreview[reaction.ReactionType]++
 	}
 	return reactionsPreview, nil
-}
-
-func (p *postRepository) AddComment(comment *dmodels.Comment) (*dmodels.Comment, error) {
-	commentEntity := models.EntityFromCommentDomain(comment)
-	if err := p.db.Create(commentEntity).Error; err != nil {
-		return nil, err
-	}
-	return commentEntity.ToDomainComment(), nil
-}
-
-func (p *postRepository) DeleteComment(commentID string) error {
-	var children *[]models.Comments
-	if err := p.db.Where("parent_comment_id = ?", commentID).Find(&children).Error; err != nil {
-		return err
-	}
-
-	for _, c := range *children {
-		if err := p.DeleteComment(c.ID.String()); err != nil {
-			return err
-		}
-	}
-
-	if err := p.db.Where("id = ?", commentID).Delete(&models.Comments{}).Error; err != nil {
-		return err
-	}
-	return nil
-}
-
-func (p *postRepository) GetCommentsByPostID(postID string) ([]dmodels.Comment, error) {
-	var comments []models.Comments
-	if err := p.db.Where("post_id = ?", postID).Find(&comments).Error; err != nil {
-		return nil, err
-	}
-
-	dcomments := make([]dmodels.Comment, len(comments))
-	for i, c := range comments {
-		dcomments[i] = *c.ToDomainComment()
-	}
-
-	return dcomments, nil
 }

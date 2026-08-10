@@ -17,7 +17,23 @@ type Posts struct {
 	CreatedAt    time.Time  `gorm:"column:created_at;not null;default:now()"`
 	AuthorID     uuid.UUID  `gorm:"column:author_id;type:uuid;not null"`
 	PostParentID *uuid.UUID `gorm:"column:post_parent_id;type:uuid"`
+
+	CommentChildren []*Comments `gorm:"foreignKey:PostID;references:ID;constraint:OnDelete:CASCADE"`
 }
+
+// func (p *Posts) AfterDelete(tx *gorm.DB) (err error) {
+// 	var post Posts
+// 	tx.Unscoped().Last(&post)
+
+// 	if err = tx.Where("post_id = ?", post.ID).Delete(&Comments{}).Error; err != nil {
+// 		return err
+// 	}
+
+// 	if err = tx.Where("target_id = ?", post.ID).Delete(&Reactions{}).Error; err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
 
 func EntityFromPostDomain(p *models.Post) *Posts {
 	var postParentID uuid.UUID
