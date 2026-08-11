@@ -24,4 +24,5 @@ type Reaction struct {
 	UserID             string
 	TargetID           string
 	CreatedAt          uint64
+	Author             Author
 }

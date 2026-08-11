@@ -80,6 +80,15 @@ func (p *reactionRepository) GetTargetPreviewReactions(targetID string) (map[str
 	return getTargetPreviewReactions(p.db, targetID)
 }
 
+func getReactionsByTargetId(db *gorm.DB, targetID string) ([]*models.Reactions, error) {
+	var reactions []*models.Reactions
+	if err := db.Preload("Author").Where("target_id = ?", targetID).Find(&reactions).Error; err != nil {
+		return nil, err
+	}
+
+	return reactions, nil
+}
+
 func getPreviewReactionsByIDs(db *gorm.DB, targetIDs []string) (map[string]map[string]int, error) {
 	reactionx := make(map[string]map[string]int)
 	var reactions []models.Reactions

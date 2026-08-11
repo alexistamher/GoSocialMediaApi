@@ -72,6 +72,6 @@ func FromDomainTargetReaction(r *models.Reaction) *TargetReactionResponse {
 		TargetID:     uuid.MustParse(r.TargetID),
 		ReactionType: string(r.ReactionType),
 		CreatedAt:    r.CreatedAt,
-		Author:       AuthorResponse{ID: r.UserID},
+		Author:       AuthorResponse(r.Author),
 	}
 }

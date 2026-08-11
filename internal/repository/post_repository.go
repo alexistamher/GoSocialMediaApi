@@ -108,19 +108,31 @@ func (p *postRepository) GetAllPosts(userID string, offset *int, limit *int) ([]
 	return dposts, &nextOffset, nil
 }
 
-func (p *postRepository) GetPostByID(postID string) (*dmodels.Post, error) {
+func (p *postRepository) GetPostByID(postID string) (*dmodels.PostWithDetails, error) {
 	var post *models.Posts
-	if err := p.db.Where("id = ?", postID).First(&post).Error; err != nil {
+	if err := p.db.Preload("Author").Where("id = ?", postID).First(&post).Error; err != nil {
 		return nil, err
 	}
-	return post.ToDomainPost(), nil
+	reactions, err := getReactionsByTargetId(p.db, postID)
+	if err != nil {
+		return nil, err
+	}
+
+	rpost := post.ToDomainPostWithDetails(reactions)
+
+	return rpost, nil
 }
 
 func (p *postRepository) GetPostsByUserID(userID string, offset *int, limit uint) ([]*dmodels.Post, *int, error) {
+	var postIDs []string
 	var posts []*models.Posts
 	var total int64
 
-	baseQuery := p.db.Model(&models.Posts{}).Where("author_id = ?", userID)
+	if err := p.db.Table("posts").Where("author_id = ?", userID).Pluck("id", &postIDs).Error; err != nil {
+		return nil, nil, err
+	}
+
+	baseQuery := p.db.Preload("Author").Model(&models.Posts{}).Where("id IN ?", postIDs)
 
 	if err := baseQuery.Count(&total).Error; err != nil {
 		return nil, nil, err
@@ -136,9 +148,16 @@ func (p *postRepository) GetPostsByUserID(userID string, offset *int, limit uint
 		return nil, nil, err
 	}
 
+	reactions, err := getPreviewReactionsByIDs(p.db, postIDs)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	dpost := make([]*dmodels.Post, len(posts))
 	for i, post := range posts {
-		dpost[i] = post.ToDomainPost()
+		post := post.ToDomainPost()
+		post.PreviewReactions = reactions[post.ID]
+		dpost[i] = post
 	}
 
 	currentOffset := 0

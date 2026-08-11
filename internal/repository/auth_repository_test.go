@@ -1,7 +1,6 @@
 package repository_test
 
 import (
-	"log"
 	"testing"
 
 	"github.com/alexistamher/social-api-go/internal/domain/models"
@@ -72,7 +71,6 @@ func TestAuthRepository_GetUserInfo_Success(t *testing.T) {
 	}
 
 	ID, _ := r.Register(user)
-	log.Printf("pass: %s", user.Password)
 
 	ruser, err := r.GetUserInfo(*ID)
 	if err != nil {

@@ -17,3 +17,13 @@ type Post struct {
 	PostParent       *Post
 	CreatedAt        uint64
 }
+
+type PostWithDetails struct {
+	ID         string
+	Content    string
+	Author     Author
+	Reactions  []Reaction
+	Comments   []CommentWithAuthor
+	Visibility PostVisibility
+	CreatedAt  uint64
+}

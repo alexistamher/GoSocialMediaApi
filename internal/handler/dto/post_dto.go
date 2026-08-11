@@ -19,9 +19,18 @@ type PostResponse struct {
 	Content          string         `json:"content"`
 	Author           AuthorResponse `json:"author"`
 	CommentsCount    int            `json:"comments_count"`
-	ReactionsPreview map[string]int `json:"reactions"`
+	PreviewReactions map[string]int `json:"preview_reactions"`
 	Visibility       string         `json:"visibility" binding:"oneof=friends public"`
 	CreatedAt        uint64         `json:"created_at"`
+}
+
+type PostWithDetailsResponse struct {
+	ID         string                   `json:"id"`
+	Content    string                   `json:"content"`
+	Author     AuthorResponse           `json:"author"`
+	Reactions  []TargetReactionResponse `json:"reactions"`
+	Visibility string                   `json:"visibility" binding:"oneof=friends public"`
+	CreatedAt  uint64                   `json:"created_at"`
 }
 
 func (r *CreatePostRequest) ToDomainPost() *models.Post {
@@ -44,8 +53,23 @@ func ResponseFromDomainPost(p *models.Post) *PostResponse {
 		Content:          p.Content,
 		Author:           *ResponseFromDomainAuthor(&p.Author),
 		CommentsCount:    p.CommentsCount,
-		ReactionsPreview: map[string]int{},
+		PreviewReactions: p.PreviewReactions,
 		Visibility:       string(p.Visibility),
 		CreatedAt:        p.CreatedAt,
+	}
+}
+
+func ResponseFromDomainPostWithDetails(p *models.PostWithDetails) *PostWithDetailsResponse {
+	reactions := make([]TargetReactionResponse, len(p.Reactions))
+	for i, reaction := range p.Reactions {
+		reactions[i] = *FromDomainTargetReaction(&reaction)
+	}
+	return &PostWithDetailsResponse{
+		ID:         p.ID,
+		Content:    p.Content,
+		Author:     *ResponseFromDomainAuthor(&p.Author),
+		Reactions:  reactions,
+		Visibility: string(p.Visibility),
+		CreatedAt:  p.CreatedAt,
 	}
 }

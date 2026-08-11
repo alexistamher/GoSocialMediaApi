@@ -1,7 +1,6 @@
 package service
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/alexistamher/social-api-go/internal/domain/repository"
@@ -47,7 +46,6 @@ func (s *PostService) GetUserPosts(c *gin.Context, userID string) error {
 }
 
 func (s *PostService) CreatePost(c *gin.Context, req dto.CreatePostRequest) error {
-	log.Println("aqui")
 	post := req.ToDomainPost()
 	post, err := s.repo.AddPost(post)
 	if err != nil {
@@ -65,6 +63,6 @@ func (s *PostService) GetPostByID(c *gin.Context, postID string) error {
 		return err
 	}
 
-	c.JSON(http.StatusOK, dto.ResponseFromDomainPost(post))
+	c.JSON(http.StatusOK, dto.ResponseFromDomainPostWithDetails(post))
 	return nil
 }
