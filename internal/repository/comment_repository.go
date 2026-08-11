@@ -17,7 +17,7 @@ func NewCommentRepository(db *gorm.DB) repository.CommentRepository {
 
 func (p *commentRepository) AddComment(comment *dmodels.Comment) (*dmodels.Comment, error) {
 	commentEntity := models.EntityFromCommentDomain(comment)
-	if err := p.db.Create(commentEntity).Error; err != nil {
+	if err := p.db.Create(&commentEntity).Error; err != nil {
 		return nil, err
 	}
 	return commentEntity.ToDomainComment(), nil

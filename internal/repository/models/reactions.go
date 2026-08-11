@@ -24,5 +24,6 @@ func EntityFromReactionDomain(reaction *Reactions) *dmodels.Reaction {
 		ReactionTargetType: dmodels.ReactionTargetType(reaction.ReactionTargetType),
 		UserID:             reaction.UserID.String(),
 		TargetID:           reaction.TargetID.String(),
+		CreatedAt:          uint64(reaction.CreatedAt.UnixMilli()),
 	}
 }

@@ -22,6 +22,7 @@ func (h *CommentHandler) AddComment(c *gin.Context) {
 		return
 	}
 
+	req.UserID = c.Value(UserIDKey).(string)
 	if err := h.commentService.AddComment(c, req); err != nil {
 		respondError(c, err)
 		return

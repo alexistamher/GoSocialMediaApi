@@ -11,8 +11,8 @@ type ReactionHandler struct {
 	reactionService service.ReactionService
 }
 
-func NewReactionHandler() *ReactionHandler {
-	return &ReactionHandler{}
+func NewReactionHandler(service service.ReactionService) *ReactionHandler {
+	return &ReactionHandler{reactionService: service}
 }
 
 func (h *ReactionHandler) AddReaction(c *gin.Context) {
@@ -22,6 +22,7 @@ func (h *ReactionHandler) AddReaction(c *gin.Context) {
 		return
 	}
 
+	req.UserID = c.Value(UserIDKey).(string)
 	if err := h.reactionService.AddReaction(c, req); err != nil {
 		respondError(c, errors.ErrInternalServerError)
 		return

@@ -167,6 +167,7 @@ func TestCommentRepository_RemoveCommentWithAllReactions_Success(t *testing.T) {
 	postRepo := repository.NewPostRepository(tx)
 	cmntRepo := repository.NewCommentRepository(tx)
 	authRepo := repository.NewAuthRepository(tx)
+	reacRepo := repository.NewReactionRepository(tx)
 
 	userIds := make([]*string, 3)
 	for i := range 3 {
@@ -196,18 +197,18 @@ func TestCommentRepository_RemoveCommentWithAllReactions_Success(t *testing.T) {
 	rcomment, err := cmntRepo.AddComment(comment)
 	a.NoError(err)
 
-	postRepo.AddReaction(rcomment.ID, *userIds[0], "like", "comment")
-	postRepo.AddReaction(rcomment.ID, *userIds[1], "love", "comment")
-	postRepo.AddReaction(rcomment.ID, *userIds[2], "haha", "comment")
+	reacRepo.AddReaction(rcomment.ID, *userIds[0], "like", "comment")
+	reacRepo.AddReaction(rcomment.ID, *userIds[1], "love", "comment")
+	reacRepo.AddReaction(rcomment.ID, *userIds[2], "haha", "comment")
 
-	reactions, err := postRepo.GetTargetReactions(rcomment.ID)
+	reactions, err := reacRepo.GetTargetReactions(rcomment.ID)
 	a.NoError(err)
 	a.Len(reactions, 3)
 
 	err = cmntRepo.DeleteComment(rcomment.ID)
 	a.NoError(err)
 
-	reactions, err = postRepo.GetTargetReactions(rcomment.ID)
+	reactions, err = reacRepo.GetTargetReactions(rcomment.ID)
 	a.NoError(err)
 	a.Len(reactions, 0)
 

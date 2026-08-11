@@ -5,6 +5,8 @@ import dmodels "github.com/alexistamher/social-api-go/internal/domain/models"
 type AddCommentRequest struct {
 	Content         string  `json:"content" binding:"required,min=1,max=1000"`
 	ParentCommentID *string `json:"parent_comment_id,omitempty" binding:"omitempty,uuid"`
+	PostID          string  `json:"post_id" binding:"required,uuid"`
+	UserID          string
 }
 
 type CreatedCommentResponse struct {
@@ -25,6 +27,8 @@ func (c *AddCommentRequest) ToDomainComment() *dmodels.Comment {
 	return &dmodels.Comment{
 		Content:         c.Content,
 		ParentCommentID: c.ParentCommentID,
+		PostID:          c.PostID,
+		Author:          dmodels.Author{ID: c.UserID},
 	}
 }
 

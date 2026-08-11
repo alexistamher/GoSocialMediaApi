@@ -25,11 +25,16 @@ type PostResponse struct {
 }
 
 func (r *CreatePostRequest) ToDomainPost() *models.Post {
+	var postParent *models.Post
+	if r.ParentID != nil {
+		postParent = &models.Post{ID: *r.ParentID}
+	}
+
 	return &models.Post{
 		Content:    r.Content,
 		Visibility: models.PostVisibility(r.Visibility),
 		Author:     models.Author{ID: r.UserID},
-		PostParent: &models.Post{ID: *r.ParentID},
+		PostParent: postParent,
 	}
 }
 

@@ -10,9 +10,5 @@ type PostRepository interface {
 	GetAllPosts(userID string, offset *int, limit *int) ([]*models.Post, *int, error)
 	GetPostByID(postID string) (*models.Post, error)
 	GetPostsByUserID(userID string, offset *int, limit uint) ([]*models.Post, *int, error)
-	AddReaction(postID string, userID string, reactionType string, reactionTargetType string) (*models.Reaction, error)
-	DeleteReaction(reactionID string) error
-	GetTargetReactions(targetID string) ([]*models.Reaction, error)
-	GetTargetPreviewReactions(targetID string) (map[string]int, error)
 	GetCommentsByPostID(postID string) ([]*models.CommentWithAuthor, error)
 }

@@ -6,12 +6,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func NewHandlers(authService service.AuthService) Handlers {
-	return Handlers{Auth: handler.NewAuthHandler(authService)}
+func NewHandlers(authService service.AuthService, postService service.PostService, commentService service.CommentService,
+	reactionService service.ReactionService) Handlers {
+	return Handlers{
+		Auth:     handler.NewAuthHandler(authService),
+		Post:     handler.NewPostHandler(postService),
+		Comment:  handler.NewCommentHandler(commentService),
+		Reaction: handler.NewReactionHandler(reactionService),
+	}
 }
 
 type Handlers struct {
-	Auth *handler.AuthHandler
+	Auth     *handler.AuthHandler
+	Post     *handler.PostHandler
+	Comment  *handler.CommentHandler
+	Reaction *handler.ReactionHandler
 }
 
 func New(h Handlers, authMiddleware gin.HandlerFunc) *gin.Engine {
@@ -26,6 +35,20 @@ func New(h Handlers, authMiddleware gin.HandlerFunc) *gin.Engine {
 	private.Use(authMiddleware)
 	{
 		private.GET("/auth/info", h.Auth.GetInfo)
+
+		private.POST("/posts", h.Post.CreatePost)
+		private.GET("/posts", h.Post.GetUserPosts)
+		private.GET("/posts/:post_id", h.Post.GetPostByID)
+		private.DELETE("/posts/:post_id", h.Post.DeletePost)
+
+		private.POST("/comments", h.Comment.AddComment)
+		private.DELETE("/comments/:comment_id", h.Comment.DeleteComment)
+		private.GET("/comments/:comment_id", h.Comment.GetComments)
+
+		private.POST("/reactions", h.Reaction.AddReaction)
+		private.PUT("/reactions", h.Reaction.UpdateReaction)
+		private.GET("/reactions/:target_id", h.Reaction.GetTargetReactions)
+		private.DELETE("/reactions/:target_id", h.Reaction.DeleteReaction)
 	}
 
 	return r

@@ -8,17 +8,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type CommentService struct {
+type commentService struct {
 	repo repository.CommentRepository
 }
 
-func NewCommentService(repo repository.CommentRepository) *CommentService {
-	return &CommentService{
+func NewCommentService(repo repository.CommentRepository) CommentService {
+	return &commentService{
 		repo: repo,
 	}
 }
 
-func (s *CommentService) AddComment(c *gin.Context, req dto.AddCommentRequest) error {
+func (s *commentService) AddComment(c *gin.Context, req dto.AddCommentRequest) error {
 	result, err := s.repo.AddComment(req.ToDomainComment())
 	if err != nil {
 		return err
@@ -28,7 +28,7 @@ func (s *CommentService) AddComment(c *gin.Context, req dto.AddCommentRequest) e
 	return nil
 }
 
-func (s *CommentService) GetCommentsByCommentID(c *gin.Context, commentID string) error {
+func (s *commentService) GetCommentsByCommentID(c *gin.Context, commentID string) error {
 	result, err := s.repo.GetCommentsByCommentID(commentID)
 	if err != nil {
 		return err
@@ -37,7 +37,7 @@ func (s *CommentService) GetCommentsByCommentID(c *gin.Context, commentID string
 	return nil
 }
 
-func (s *CommentService) DeleteComment(c *gin.Context, commentID string) error {
+func (s *commentService) DeleteComment(c *gin.Context, commentID string) error {
 	err := s.repo.DeleteComment(commentID)
 	if err != nil {
 		return err

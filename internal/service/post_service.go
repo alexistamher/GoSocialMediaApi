@@ -1,6 +1,7 @@
 package service
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/alexistamher/social-api-go/internal/domain/repository"
@@ -12,8 +13,8 @@ type PostService struct {
 	repo repository.PostRepository
 }
 
-func NewPostService(repo repository.PostRepository) *PostService {
-	return &PostService{repo: repo}
+func NewPostService(repo repository.PostRepository) PostService {
+	return PostService{repo: repo}
 }
 
 func (s *PostService) DeletePost(c *gin.Context, postID string) error {
@@ -46,6 +47,7 @@ func (s *PostService) GetUserPosts(c *gin.Context, userID string) error {
 }
 
 func (s *PostService) CreatePost(c *gin.Context, req dto.CreatePostRequest) error {
+	log.Println("aqui")
 	post := req.ToDomainPost()
 	post, err := s.repo.AddPost(post)
 	if err != nil {

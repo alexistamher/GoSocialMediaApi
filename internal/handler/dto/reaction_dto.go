@@ -9,11 +9,12 @@ type AddReactionRequest struct {
 	TargetID           uuid.UUID `json:"target_id" binding:"required,uuid"`
 	ReactionType       string    `json:"reaction_type" binding:"required,oneof=like love haha wow sad angry"`
 	ReactionTargetType string    `json:"reaction_target_type" binding:"required,oneof=post comment"`
+	UserID             string
 }
 
 type UpdateReactionRequest struct {
 	ID           uuid.UUID `json:"id" binding:"required,uuid"`
-	ReactionType string    `json:"reaction_type" binding:"required"`
+	ReactionType string    `json:"reaction_type" binding:"required,oneof=like love haha wow sad angry"`
 }
 
 type CreatedReactionResponse struct {

@@ -50,7 +50,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 }
 
 func (h *AuthHandler) GetInfo(c *gin.Context) {
-	userID, exists := c.Get(ContextKeyUserId)
+	userID, exists := c.Get(UserIDKey)
 	if !exists {
 		respondError(c, errors.ErrMissingUserID)
 		return

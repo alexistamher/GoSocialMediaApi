@@ -112,6 +112,7 @@ func TestPostRepository_AddPostReactions_Success(t *testing.T) {
 	a := assert.New(t)
 	postRepo := repository.NewPostRepository(tx)
 	authRepo := repository.NewAuthRepository(tx)
+	reacRepo := repository.NewReactionRepository(tx)
 	var userIds []*string
 
 	for i := range 9 {
@@ -142,12 +143,12 @@ func TestPostRepository_AddPostReactions_Success(t *testing.T) {
 	}
 	for userID := range userIds {
 		reactionIdx := rand.Intn(6)
-		_, _ = postRepo.AddReaction(rpost.ID, *userIds[userID], string(reactions[reactionIdx]), string(models.PostType))
+		_, _ = reacRepo.AddReaction(rpost.ID, *userIds[userID], string(reactions[reactionIdx]), string(models.PostType))
 	}
-	postReactions, _ := postRepo.GetTargetReactions(rpost.ID)
+	postReactions, _ := reacRepo.GetTargetReactions(rpost.ID)
 	a.Len(postReactions, 9)
 
-	previewReactions, _ := postRepo.GetTargetPreviewReactions(rpost.ID)
+	previewReactions, _ := reacRepo.GetTargetPreviewReactions(rpost.ID)
 	prevCounter := 0
 	for _, count := range previewReactions {
 		prevCounter += count
@@ -194,6 +195,7 @@ func TestPostRepository_RemoveReactionFromTarget(t *testing.T) {
 	a := assert.New(t)
 	postRepo := repository.NewPostRepository(tx)
 	authRepo := repository.NewAuthRepository(tx)
+	reacRepo := repository.NewReactionRepository(tx)
 	user := &models.User{
 		Username:    "JohnC",
 		Password:    "passwordHash",
@@ -209,13 +211,13 @@ func TestPostRepository_RemoveReactionFromTarget(t *testing.T) {
 	}
 	rpost, _ := postRepo.AddPost(post)
 
-	rpostReaction, _ := postRepo.AddReaction(rpost.ID, *userId, string(models.LikeType), string(models.PostType))
+	rpostReaction, _ := reacRepo.AddReaction(rpost.ID, *userId, string(models.LikeType), string(models.PostType))
 
-	reactions, _ := postRepo.GetTargetReactions(rpost.ID)
+	reactions, _ := reacRepo.GetTargetReactions(rpost.ID)
 	a.Len(reactions, 1)
-	err := postRepo.DeleteReaction(rpostReaction.ID)
+	err := reacRepo.DeleteReaction(rpostReaction.ID)
 	a.NoError(err)
-	reactions, _ = postRepo.GetTargetReactions(rpost.ID)
+	reactions, _ = reacRepo.GetTargetReactions(rpost.ID)
 	a.Len(reactions, 0)
 }
 
@@ -228,6 +230,7 @@ func TestPostRepository_RemovePostAlongWithCommentsAndReactions_Success(t *testi
 	postRepo := repository.NewPostRepository(tx)
 	cmntRepo := repository.NewCommentRepository(tx)
 	authRepo := repository.NewAuthRepository(tx)
+	reacRepo := repository.NewReactionRepository(tx)
 
 	userIds := make([]*string, 3)
 	for i := range 3 {
@@ -259,22 +262,22 @@ func TestPostRepository_RemovePostAlongWithCommentsAndReactions_Success(t *testi
 	_, err := cmntRepo.AddComment(comment)
 	a.NoError(err)
 
-	postRepo.AddReaction(rpost.ID, *userIds[0], "like", "post")
-	postRepo.AddReaction(rpost.ID, *userIds[1], "love", "post")
-	postRepo.AddReaction(rpost.ID, *userIds[2], "haha", "post")
+	reacRepo.AddReaction(rpost.ID, *userIds[0], "like", "post")
+	reacRepo.AddReaction(rpost.ID, *userIds[1], "love", "post")
+	reacRepo.AddReaction(rpost.ID, *userIds[2], "haha", "post")
 
 	comments, err = postRepo.GetCommentsByPostID(rpost.ID)
 	a.NoError(err)
 	a.Len(comments, 1)
 
-	reactions, err := postRepo.GetTargetReactions(rpost.ID)
+	reactions, err := reacRepo.GetTargetReactions(rpost.ID)
 	a.NoError(err)
 	a.Len(reactions, 3)
 
 	err = postRepo.DeletePost(rpost.ID)
 	a.NoError(err)
 
-	reactions, err = postRepo.GetTargetReactions(rpost.ID)
+	reactions, err = reacRepo.GetTargetReactions(rpost.ID)
 	a.NoError(err)
 	a.Len(reactions, 0)
 
@@ -291,6 +294,7 @@ func TestPostRepository_GetDetailedPosts(t *testing.T) {
 	postRepo := repository.NewPostRepository(tx)
 	cmntRepo := repository.NewCommentRepository(tx)
 	authRepo := repository.NewAuthRepository(tx)
+	reacRepo := repository.NewReactionRepository(tx)
 
 	usedIDs := make([]string, 10)
 
@@ -332,7 +336,7 @@ func TestPostRepository_GetDetailedPosts(t *testing.T) {
 	}
 	for _, userID := range usedIDs {
 		reaction := reactions[rand.Intn(len(reactions))]
-		_, err := postRepo.AddReaction(rpost.ID, userID, string(reaction), string(models.PostType))
+		_, err := reacRepo.AddReaction(rpost.ID, userID, string(reaction), string(models.PostType))
 		a.NoError(err)
 	}
 

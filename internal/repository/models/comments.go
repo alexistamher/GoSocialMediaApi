@@ -1,6 +1,8 @@
 package models
 
 import (
+	"encoding/json"
+	"log"
 	"time"
 
 	dmodels "github.com/alexistamher/social-api-go/internal/domain/models"
@@ -40,10 +42,13 @@ func EntityFromCommentDomain(comment *dmodels.Comment) *Comments {
 		ID, _ := uuid.Parse(*comment.ParentCommentID)
 		parentCommentID = &ID
 	}
+	jcomment, _ := json.Marshal(comment)
+	log.Printf("comment %s", jcomment)
 
 	return &Comments{
 		AuthorID:        uuid.MustParse(comment.Author.ID),
 		PostID:          uuid.MustParse(comment.PostID),
+		Content:         comment.Content,
 		ParentCommentID: parentCommentID,
 		CreatedAt:       time.Unix(int64(comment.CreatedAt), 0),
 	}

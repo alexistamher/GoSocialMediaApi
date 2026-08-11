@@ -5,7 +5,6 @@ import (
 	drepository "github.com/alexistamher/social-api-go/internal/domain/repository"
 	"github.com/alexistamher/social-api-go/internal/repository/models"
 
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -151,58 +150,6 @@ func (p *postRepository) GetPostsByUserID(userID string, offset *int, limit uint
 	return dpost, &nextOffset, nil
 }
 
-func (p *postRepository) AddReaction(postID string, userID string, reactionType string, reactionTargetType string) (*dmodels.Reaction, error) {
-	var reaction = models.Reactions{
-		TargetID:           uuid.MustParse(postID),
-		UserID:             uuid.MustParse(userID),
-		ReactionType:       reactionType,
-		ReactionTargetType: reactionTargetType,
-	}
-
-	if err := p.db.Create(&reaction).Error; err != nil {
-		return nil, err
-	}
-	return models.EntityFromReactionDomain(&reaction), nil
-}
-
-func (p *postRepository) DeleteReaction(reactionID string) error {
-	var reaction models.Reactions
-	if err := p.db.Where("id = ?", reactionID).Delete(&reaction).Error; err != nil {
-		return err
-	}
-	return nil
-}
-
-func (p *postRepository) GetTargetReactions(targetID string) ([]*dmodels.Reaction, error) {
-	var reactions []models.Reactions
-	if err := p.db.Where("target_id = ?", targetID).Find(&reactions).Error; err != nil {
-		return nil, err
-	}
-	dreactions := make([]*dmodels.Reaction, len(reactions))
-	for i, reaction := range reactions {
-		dreactions[i] = models.EntityFromReactionDomain(&reaction)
-	}
-	return dreactions, nil
-}
-
-func getTargetPreviewReactions(tx *gorm.DB, targetID string) (map[string]int, error) {
-	var reactions []models.Reactions
-	if err := tx.
-		Where("target_id = ?", targetID).
-		Select("reaction_type", "target_type").Find(&reactions).Error; err != nil {
-		return nil, err
-	}
-	reactionsPreview := make(map[string]int)
-	for _, reaction := range reactions {
-		reactionsPreview[reaction.ReactionType]++
-	}
-	return reactionsPreview, nil
-}
-
-func (p *postRepository) GetTargetPreviewReactions(targetID string) (map[string]int, error) {
-	return getTargetPreviewReactions(p.db, targetID)
-}
-
 func (p *postRepository) GetCommentsByPostID(postID string) ([]*dmodels.CommentWithAuthor, error) {
 	var commentIds []string
 	if err := p.db.Model(&models.Comments{}).
@@ -231,23 +178,4 @@ func (p *postRepository) GetCommentsByPostID(postID string) ([]*dmodels.CommentW
 	}
 
 	return dcomments, nil
-}
-
-func getPreviewReactionsByIDs(db *gorm.DB, targetIDs []string) (map[string]map[string]int, error) {
-	reactionx := make(map[string]map[string]int)
-	var reactions []models.Reactions
-	if err := db.Where("target_id IN ?", targetIDs).Find(&reactions).Error; err != nil {
-		return nil, err
-	}
-
-	for _, reaction := range reactions {
-		if _, ok := reactionx[reaction.TargetID.String()]; !ok {
-			reactionx[reaction.TargetID.String()] = map[string]int{
-				reaction.ReactionType: 1,
-			}
-		} else {
-			reactionx[reaction.TargetID.String()][reaction.ReactionType]++
-		}
-	}
-	return reactionx, nil
 }

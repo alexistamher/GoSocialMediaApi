@@ -12,12 +12,14 @@ type ReactionService struct {
 	repo repository.ReactionRepository
 }
 
-func NewReactionService() *ReactionService {
-	return &ReactionService{}
+func NewReactionService(repo repository.ReactionRepository) ReactionService {
+	return ReactionService{
+		repo: repo,
+	}
 }
 
 func (r *ReactionService) AddReaction(ctx *gin.Context, req dto.AddReactionRequest) error {
-	res, err := r.repo.AddReaction(req.ToDomainReaction())
+	res, err := r.repo.AddReaction(req.TargetID.String(), req.UserID, req.ReactionType, req.ReactionTargetType)
 	if err != nil {
 		return err
 	}
@@ -35,7 +37,7 @@ func (r *ReactionService) DeleteReaction(ctx *gin.Context, reactionID string) er
 }
 
 func (r *ReactionService) UpdateReaction(ctx *gin.Context, req dto.UpdateReactionRequest) error {
-	if err := r.repo.UpdateReaction(req.ToDomainReaction()); err != nil {
+	if err := r.repo.UpdateReaction(req.ID.String(), req.ReactionType); err != nil {
 		return err
 	}
 	ctx.JSON(http.StatusOK, gin.H{"message": "Reaction updated successfully"})
@@ -43,7 +45,7 @@ func (r *ReactionService) UpdateReaction(ctx *gin.Context, req dto.UpdateReactio
 }
 
 func (r *ReactionService) GetTargetReactions(ctx *gin.Context, req dto.GetTargetReactionsRequest) error {
-	reactions, err := r.repo.GetTargetReactions(req.TargetID, req.ReactionTargetType)
+	reactions, err := r.repo.GetTargetReactions(req.TargetID)
 	if err != nil {
 		return err
 	}

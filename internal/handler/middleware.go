@@ -13,8 +13,6 @@ import (
 
 type contextKey = string
 
-const ContextKeyUserId contextKey = "user_id"
-
 const UserIDKey contextKey = "userID"
 const TokenIdKey contextKey = "tokenIdKey"
 
@@ -44,7 +42,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		ctx.Set(ContextKeyUserId, claims.UserID)
+		ctx.Set(UserIDKey, claims.UserID)
 		ctx.Set(TokenIdKey, TokenId{claims.Jti, claims.ExpiresAt.Time})
 		ctx.Next()
 	}

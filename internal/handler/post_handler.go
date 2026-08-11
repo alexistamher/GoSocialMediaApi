@@ -58,7 +58,7 @@ func (h *PostHandler) DeletePost(c *gin.Context) {
 }
 
 func (h *PostHandler) GetUserPosts(c *gin.Context) {
-	userID := c.Value("user_id").(string)
+	userID := c.Value(UserIDKey).(string)
 	if userID == "" {
 		respondError(c, errors.ErrBadRequest)
 		return
