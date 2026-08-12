@@ -261,9 +261,9 @@ func TestPostRepository_RemovePostAlongWithCommentsAndReactions_Success(t *testi
 	_, err := cmntRepo.AddComment(comment)
 	a.NoError(err)
 
-	reacRepo.AddReaction(rpost.ID, *userIds[0], "like", "post")
-	reacRepo.AddReaction(rpost.ID, *userIds[1], "love", "post")
-	reacRepo.AddReaction(rpost.ID, *userIds[2], "haha", "post")
+	_, _ = reacRepo.AddReaction(rpost.ID, *userIds[0], "like", "post")
+	_, _ = reacRepo.AddReaction(rpost.ID, *userIds[1], "love", "post")
+	_, _ = reacRepo.AddReaction(rpost.ID, *userIds[2], "haha", "post")
 
 	comments, err = postRepo.GetCommentsByPostID(rpost.ID)
 	a.NoError(err)
@@ -322,7 +322,7 @@ func TestPostRepository_GetDetailedPosts(t *testing.T) {
 			PostID:          rpost.ID,
 			ParentCommentID: nil,
 		}
-		cmntRepo.AddComment(comment)
+		_, _ = cmntRepo.AddComment(comment)
 	}
 
 	reactions := []models.ReactionType{

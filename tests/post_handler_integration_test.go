@@ -132,6 +132,7 @@ func TestPostHandler_Integration_Flow(t *testing.T) {
 		var commentsRes []dto.CommentResponse
 		err = json.Unmarshal(w.Body.Bytes(), &commentsRes)
 
+		assert.NoError(t, err)
 		assert.Len(t, commentsRes, 1)
 	})
 
@@ -168,6 +169,7 @@ func TestPostHandler_Integration_Flow(t *testing.T) {
 		var commentsRes dto.CommentDetailsResponse
 		err = json.Unmarshal(w.Body.Bytes(), &commentsRes)
 
+		assert.NoError(t, err)
 		assert.Len(t, commentsRes.Comments, 1)
 	})
 
@@ -202,6 +204,7 @@ func TestPostHandler_Integration_Flow(t *testing.T) {
 		var postRes *dto.PostWithDetailsResponse
 		err = json.Unmarshal(w.Body.Bytes(), &postRes)
 
+		assert.NoError(t, err)
 		assert.NotEmpty(t, postRes.Reactions)
 
 		reaction := postRes.Reactions[0]
@@ -244,6 +247,7 @@ func TestPostHandler_Integration_Flow(t *testing.T) {
 		var postRes *dto.CommentDetailsResponse
 		err = json.Unmarshal(w.Body.Bytes(), &postRes)
 
+		assert.NoError(t, err)
 		assert.NotEmpty(t, postRes.Reactions)
 
 		reaction := postRes.Reactions[0]

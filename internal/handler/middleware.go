@@ -20,7 +20,7 @@ func AuthMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		authHeader := ctx.GetHeader("Authorization")
 		if authHeader == "" {
-			ctx.AbortWithError(http.StatusUnauthorized, errors.ErrUnauthorized)
+			_ = ctx.AbortWithError(http.StatusUnauthorized, errors.ErrUnauthorized)
 			return
 		}
 		parts := strings.Split(authHeader, " ")
@@ -30,14 +30,14 @@ func AuthMiddleware() gin.HandlerFunc {
 			})
 			ctx.Writer.Header().Add("Content-Type", "application/json")
 			ctx.Writer.WriteHeader(http.StatusUnauthorized)
-			ctx.Writer.Write(err)
-			ctx.AbortWithError(http.StatusUnauthorized, errors.ErrInvalidCredentials)
+			_, _ = ctx.Writer.Write(err)
+			_ = ctx.AbortWithError(http.StatusUnauthorized, errors.ErrInvalidCredentials)
 			return
 		}
 
 		claims, err := auth.ValidateToken(parts[1])
 		if err != nil {
-			ctx.AbortWithError(http.StatusUnauthorized, err)
+			_ = ctx.AbortWithError(http.StatusUnauthorized, err)
 			return
 		}
 

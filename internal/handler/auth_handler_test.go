@@ -19,7 +19,9 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	os.Setenv("JWT_SECRET", "test-secret-key")
+	if err := os.Setenv("JWT_SECRET", "test-secret-key"); err != nil {
+		panic(err)
+	}
 	gin.SetMode(gin.TestMode)
 	os.Exit(m.Run())
 }

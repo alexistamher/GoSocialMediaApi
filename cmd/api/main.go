@@ -33,5 +33,5 @@ func main() {
 
 	h := router.NewHandlers(authService, postService, commentService, reactionService)
 	r := router.New(h, handler.AuthMiddleware())
-	r.Run(":" + port)
+	_ = r.Run(":" + port)
 }

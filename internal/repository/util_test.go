@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var db, ctr = GetTestDB()
+var db, _ = GetTestDB()
 
 func GetTestDB() (*gorm.DB, testcontainers.Container) {
 	ctx := context.Background()
@@ -50,6 +50,7 @@ func GetTestDB() (*gorm.DB, testcontainers.Container) {
 	return db, ctr
 }
 
+//nolint:unused
 func printJson(data any) {
 	res, _ := json.MarshalIndent(data, "\t", "\t")
 	log.Printf("json: %s", string(res))

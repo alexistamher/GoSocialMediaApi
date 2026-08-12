@@ -197,9 +197,9 @@ func TestCommentRepository_RemoveCommentWithAllReactions_Success(t *testing.T) {
 	rcomment, err := cmntRepo.AddComment(comment)
 	a.NoError(err)
 
-	reacRepo.AddReaction(rcomment.ID, *userIds[0], "like", "comment")
-	reacRepo.AddReaction(rcomment.ID, *userIds[1], "love", "comment")
-	reacRepo.AddReaction(rcomment.ID, *userIds[2], "haha", "comment")
+	_, _ = reacRepo.AddReaction(rcomment.ID, *userIds[0], "like", "comment")
+	_, _ = reacRepo.AddReaction(rcomment.ID, *userIds[1], "love", "comment")
+	_, _ = reacRepo.AddReaction(rcomment.ID, *userIds[2], "haha", "comment")
 
 	reactions, err := reacRepo.GetTargetReactions(rcomment.ID)
 	a.NoError(err)
