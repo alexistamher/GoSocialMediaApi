@@ -6,25 +6,25 @@ import (
 )
 
 type AddReactionRequest struct {
-	TargetID           uuid.UUID `json:"target_id" binding:"required,uuid"`
-	ReactionType       string    `json:"reaction_type" binding:"required,oneof=like love haha wow sad angry"`
-	ReactionTargetType string    `json:"reaction_target_type" binding:"required,oneof=post comment"`
+	TargetID           string `json:"target_id" binding:"required,uuid"`
+	ReactionType       string `json:"reaction_type" binding:"required,oneof=like love haha wow sad angry"`
+	ReactionTargetType string `json:"reaction_target_type" binding:"required,oneof=post comment"`
 	UserID             string
 }
 
 type UpdateReactionRequest struct {
-	ID           uuid.UUID `json:"id" binding:"required,uuid"`
-	ReactionType string    `json:"reaction_type" binding:"required,oneof=like love haha wow sad angry"`
+	ID           string `json:"id" binding:"required,uuid"`
+	ReactionType string `json:"reaction_type" binding:"required,oneof=like love haha wow sad angry"`
 }
 
 type CreatedReactionResponse struct {
-	ID        uuid.UUID `json:"id"`
-	CreatedAt uint64    `json:"created_at"`
+	ID        string `json:"id"`
+	CreatedAt uint64 `json:"created_at"`
 }
 
 type TargetReactionResponse struct {
-	ID           uuid.UUID      `json:"id"`
-	TargetID     uuid.UUID      `json:"target_id"`
+	ID           string         `json:"id"`
+	TargetID     string         `json:"target_id"`
 	ReactionType string         `json:"reaction_type"`
 	CreatedAt    uint64         `json:"created_at"`
 	Author       AuthorResponse `json:"author"`
@@ -46,7 +46,7 @@ type GetTargetReactionsRequest struct {
 
 func (r *AddReactionRequest) ToDomainReaction() *models.Reaction {
 	return &models.Reaction{
-		TargetID:           r.TargetID.String(),
+		TargetID:           r.TargetID,
 		ReactionType:       models.ReactionType(r.ReactionType),
 		ReactionTargetType: models.ReactionTargetType(r.ReactionTargetType),
 	}
@@ -54,22 +54,22 @@ func (r *AddReactionRequest) ToDomainReaction() *models.Reaction {
 
 func (r *UpdateReactionRequest) ToDomainReaction() *models.Reaction {
 	return &models.Reaction{
-		ID:           r.ID.String(),
+		ID:           r.ID,
 		ReactionType: models.ReactionType(r.ReactionType),
 	}
 }
 
 func FromDomainReaction(r *models.Reaction) *CreatedReactionResponse {
 	return &CreatedReactionResponse{
-		ID:        uuid.MustParse(r.ID),
+		ID:        r.ID,
 		CreatedAt: r.CreatedAt,
 	}
 }
 
 func FromDomainTargetReaction(r *models.Reaction) *TargetReactionResponse {
 	return &TargetReactionResponse{
-		ID:           uuid.MustParse(r.ID),
-		TargetID:     uuid.MustParse(r.TargetID),
+		ID:           r.ID,
+		TargetID:     r.TargetID,
 		ReactionType: string(r.ReactionType),
 		CreatedAt:    r.CreatedAt,
 		Author:       AuthorResponse(r.Author),

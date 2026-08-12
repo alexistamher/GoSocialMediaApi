@@ -43,7 +43,8 @@ func New(h Handlers, authMiddleware gin.HandlerFunc) *gin.Engine {
 
 		private.POST("/comments", h.Comment.AddComment)
 		private.DELETE("/comments/:comment_id", h.Comment.DeleteComment)
-		private.GET("/comments/:comment_id", h.Comment.GetComments)
+		private.GET("/comments/:comment_id", h.Comment.GetCommentById)
+		private.GET("/comments/post/:post_id", h.Comment.GetPostComments)
 
 		private.POST("/reactions", h.Reaction.AddReaction)
 		private.PUT("/reactions", h.Reaction.UpdateReaction)

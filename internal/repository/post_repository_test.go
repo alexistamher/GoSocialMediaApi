@@ -36,7 +36,6 @@ func TestPostRespository_AddPost_Success(t *testing.T) {
 	}
 
 	rpost, _ := postRepo.AddPost(post)
-	printJson(rpost)
 	post = &models.Post{
 		Content:    "this is a post test with parent",
 		Visibility: models.Friends,

@@ -20,7 +20,13 @@ func (p *commentRepository) AddComment(comment *dmodels.Comment) (*dmodels.Comme
 	if err := p.db.Create(&commentEntity).Error; err != nil {
 		return nil, err
 	}
-	return commentEntity.ToDomainComment(), nil
+
+	var author *models.Users
+	if err := p.db.Where("id = ?", commentEntity.AuthorID).Find(&author).Error; err != nil {
+		return nil, err
+	}
+
+	return commentEntity.ToDomainComment(author), nil
 }
 
 func deleteCommentAndChildren(tx *gorm.DB, commentID string) error {
@@ -71,16 +77,48 @@ func (p *commentRepository) DeleteComment(commentID string) error {
 	})
 }
 
-func (p *commentRepository) GetCommentsByCommentID(commentID string) ([]*dmodels.CommentWithAuthor, error) {
+func (p *commentRepository) GetCommentByID(commentID string) (*dmodels.CommentWithDetails, error) {
 	var comments []models.CommentsWithAuthor
 	if err := p.db.Preload("Author").
 		Where("parent_comment_id = ?", commentID).Find(&comments).Error; err != nil {
 		return nil, err
 	}
 
-	dcomments := make([]*dmodels.CommentWithAuthor, len(comments))
+	var reactions []models.Reactions
+	if err := p.db.Preload("Author").
+		Where("target_id = ?", commentID).Find(&reactions).Error; err != nil {
+		return nil, err
+	}
+
+	dreactions := make([]dmodels.Reaction, len(reactions))
+	for i, react := range reactions {
+		dreactions[i] = *react.ToDomainReaction()
+	}
+
+	dcomments := make([]dmodels.Comment, len(comments))
 	for i, c := range comments {
-		dcomments[i] = c.ToDomainCommentWithAuthor()
+		dcomments[i] = *c.ToDomainComment()
+	}
+
+	cmnt := &dmodels.CommentWithDetails{
+		ID:        commentID,
+		Reactions: dreactions,
+		Comments:  dcomments,
+	}
+
+	return cmnt, nil
+}
+
+func (p *commentRepository) GetCommentsByPostID(postID string) ([]*dmodels.Comment, error) {
+	var comments []models.CommentsWithAuthor
+	if err := p.db.Preload("Author").
+		Where("post_id = ? AND parent_comment_id is NULL", postID).Find(&comments).Error; err != nil {
+		return nil, err
+	}
+
+	dcomments := make([]*dmodels.Comment, len(comments))
+	for i, c := range comments {
+		dcomments[i] = c.ToDomainComment()
 	}
 
 	return dcomments, nil

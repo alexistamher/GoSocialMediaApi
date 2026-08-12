@@ -23,7 +23,7 @@ type PostWithDetails struct {
 	Content    string
 	Author     Author
 	Reactions  []Reaction
-	Comments   []CommentWithAuthor
+	Comments   []Comment
 	Visibility PostVisibility
 	CreatedAt  uint64
 }

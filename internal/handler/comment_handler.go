@@ -42,14 +42,27 @@ func (h *CommentHandler) DeleteComment(c *gin.Context) {
 	}
 }
 
-func (h *CommentHandler) GetComments(c *gin.Context) {
+func (h *CommentHandler) GetCommentById(c *gin.Context) {
 	commentID := c.Param("comment_id")
 	if commentID == "" {
 		respondError(c, errors.ErrBadRequest)
 		return
 	}
 
-	if err := h.commentService.GetCommentsByCommentID(c, commentID); err != nil {
+	if err := h.commentService.GetCommentByID(c, commentID); err != nil {
+		respondError(c, err)
+		return
+	}
+}
+
+func (h *CommentHandler) GetPostComments(c *gin.Context) {
+	postID := c.Param("post_id")
+	if postID == "" {
+		respondError(c, errors.ErrBadRequest)
+		return
+	}
+
+	if err := h.commentService.GetCommentsByPostID(c, postID); err != nil {
 		respondError(c, err)
 		return
 	}

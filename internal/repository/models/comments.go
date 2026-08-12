@@ -27,7 +27,7 @@ type CommentsWithAuthor struct {
 	ParentCommentID *uuid.UUID `gorm:"column:parent_comment_id;type:uuid"`
 	CreatedAt       time.Time  `gorm:"column:created_at;not null;default:now()"`
 
-	Author User `gorm:"foreignKey:AuthorID;references:ID"`
+	Author Users `gorm:"foreignKey:AuthorID;references:ID"`
 }
 
 func (CommentsWithAuthor) TableName() string {
@@ -50,7 +50,31 @@ func EntityFromCommentDomain(comment *dmodels.Comment) *Comments {
 	}
 }
 
-func (c *Comments) ToDomainComment() *dmodels.Comment {
+func (c *Comments) ToDomainComment(user *Users) *dmodels.Comment {
+	var parentCommentID *string
+	var author *dmodels.Author
+	if c.ParentCommentID != nil {
+		ID := c.ParentCommentID.String()
+		parentCommentID = &ID
+	}
+
+	if user != nil {
+		author = user.ToDomainAuthor()
+	} else {
+		author = &dmodels.Author{ID: c.AuthorID.String()}
+	}
+
+	return &dmodels.Comment{
+		ID:              c.ID.String(),
+		Content:         c.Content,
+		Author:          *author,
+		PostID:          c.PostID.String(),
+		ParentCommentID: parentCommentID,
+		CreatedAt:       uint64(c.CreatedAt.Unix()),
+	}
+}
+
+func (c *CommentsWithAuthor) ToDomainComment() *dmodels.Comment {
 	var parentCommentID *string
 	if c.ParentCommentID != nil {
 		ID := c.ParentCommentID.String()
@@ -58,28 +82,12 @@ func (c *Comments) ToDomainComment() *dmodels.Comment {
 	}
 
 	return &dmodels.Comment{
-		ID:              c.ID.String(),
-		Content:         c.Content,
-		Author:          dmodels.Author{ID: c.AuthorID.String()},
-		PostID:          c.PostID.String(),
-		ParentCommentID: parentCommentID,
-		CreatedAt:       uint64(c.CreatedAt.Unix()),
-	}
-}
-
-func (c *CommentsWithAuthor) ToDomainCommentWithAuthor() *dmodels.CommentWithAuthor {
-	var parentCommentID *string
-	if c.ParentCommentID != nil {
-		ID := c.ParentCommentID.String()
-		parentCommentID = &ID
-	}
-
-	return &dmodels.CommentWithAuthor{
-		ID:              c.ID.String(),
-		Content:         c.Content,
-		Author:          c.Author.ToDomainAuthor(),
-		PostID:          c.PostID.String(),
-		ParentCommentID: parentCommentID,
-		CreatedAt:       uint64(c.CreatedAt.Unix()),
+		ID:               c.ID.String(),
+		PostID:           c.PostID.String(),
+		ParentCommentID:  parentCommentID,
+		Author:           *c.Author.ToDomainAuthor(),
+		Content:          c.Content,
+		PreviewReactions: map[string]int{},
+		CreatedAt:        uint64(c.CreatedAt.UnixMilli()),
 	}
 }

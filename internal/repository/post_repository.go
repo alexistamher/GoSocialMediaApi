@@ -18,10 +18,18 @@ func NewPostRepository(db *gorm.DB) drepository.PostRepository {
 
 func (p *postRepository) AddPost(post *dmodels.Post) (*dmodels.Post, error) {
 	postEntity := models.EntityFromPostDomain(post)
-	if err := p.db.Preload("Author").Create(&postEntity).Error; err != nil {
+	if err := p.db.Create(&postEntity).Error; err != nil {
 		return nil, err
 	}
-	return postEntity.ToDomainPost(), nil
+
+	var authorEntity *models.Users
+	if err := p.db.Find(&authorEntity).
+		Select("id", "display_name", "username").
+		Where("id = ?", postEntity.AuthorID).Error; err != nil {
+		return nil, err
+	}
+
+	return postEntity.ToDomainPost(authorEntity), nil
 }
 
 func (p *postRepository) DeletePost(postID string) error {
@@ -94,7 +102,7 @@ func (p *postRepository) GetAllPosts(userID string, offset *int, limit *int) ([]
 
 	dposts := make([]*dmodels.Post, len(posts))
 	for i, post := range posts {
-		dpost := post.ToDomainPost()
+		dpost := post.ToDomainPost(nil)
 		dpost.PreviewReactions = reactions[post.ID.String()]
 		dposts[i] = dpost
 	}
@@ -155,7 +163,7 @@ func (p *postRepository) GetPostsByUserID(userID string, offset *int, limit uint
 
 	dpost := make([]*dmodels.Post, len(posts))
 	for i, post := range posts {
-		post := post.ToDomainPost()
+		post := post.ToDomainPost(nil)
 		post.PreviewReactions = reactions[post.ID]
 		dpost[i] = post
 	}
@@ -169,7 +177,7 @@ func (p *postRepository) GetPostsByUserID(userID string, offset *int, limit uint
 	return dpost, &nextOffset, nil
 }
 
-func (p *postRepository) GetCommentsByPostID(postID string) ([]*dmodels.CommentWithAuthor, error) {
+func (p *postRepository) GetCommentsByPostID(postID string) ([]*dmodels.Comment, error) {
 	var commentIds []string
 	if err := p.db.Model(&models.Comments{}).
 		Where("post_id = ? and parent_comment_id is null", postID).
@@ -189,9 +197,9 @@ func (p *postRepository) GetCommentsByPostID(postID string) ([]*dmodels.CommentW
 		return nil, err
 	}
 
-	dcomments := make([]*dmodels.CommentWithAuthor, len(comments))
+	dcomments := make([]*dmodels.Comment, len(comments))
 	for i, c := range comments {
-		comment := c.ToDomainCommentWithAuthor()
+		comment := c.ToDomainComment()
 		comment.PreviewReactions = reactions[c.ID.String()]
 		dcomments[i] = comment
 	}

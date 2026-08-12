@@ -10,5 +10,5 @@ type PostRepository interface {
 	GetAllPosts(userID string, offset *int, limit *int) ([]*models.Post, *int, error)
 	GetPostByID(postID string) (*models.PostWithDetails, error)
 	GetPostsByUserID(userID string, offset *int, limit uint) ([]*models.Post, *int, error)
-	GetCommentsByPostID(postID string) ([]*models.CommentWithAuthor, error)
+	GetCommentsByPostID(postID string) ([]*models.Comment, error)
 }

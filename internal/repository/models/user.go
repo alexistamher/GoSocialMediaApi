@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type User struct {
+type Users struct {
 	ID           uuid.UUID `gorm:"column:id;type:uuid;primaryKey;default:gen_random_uuid();not null"`
 	Username     string    `gorm:"column:username;not null"`
 	Email        string    `gorm:"column:email;not null"`
@@ -27,13 +27,13 @@ type Authors struct {
 	AvatarURL   string `gorm:"column:avatar_url"`
 }
 
-func (u *User) BeforeCreate(tx *gorm.DB) error {
+func (u *Users) BeforeCreate(tx *gorm.DB) error {
 	u.ID = uuid.New()
 	return nil
 }
 
-func DomainUserToEntity(u *dmodels.User) *User {
-	return &User{
+func DomainUserToEntity(u *dmodels.User) *Users {
+	return &Users{
 		Username:     u.Username,
 		Email:        u.Email,
 		PasswordHash: u.Password,
@@ -43,7 +43,7 @@ func DomainUserToEntity(u *dmodels.User) *User {
 	}
 }
 
-func (u *User) ToDomainUser() *dmodels.User {
+func (u *Users) ToDomainUser() *dmodels.User {
 	return &dmodels.User{
 		ID:          u.ID.String(),
 		Username:    u.Username,
@@ -54,7 +54,7 @@ func (u *User) ToDomainUser() *dmodels.User {
 	}
 }
 
-func (u *User) ToDomainAuthor() *dmodels.Author {
+func (u *Users) ToDomainAuthor() *dmodels.Author {
 	return &dmodels.Author{
 		ID:          u.ID.String(),
 		Username:    u.Username,

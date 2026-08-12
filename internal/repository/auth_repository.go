@@ -37,7 +37,7 @@ func (r *authRepository) Register(user *dmodels.User) (*string, error) {
 }
 
 func (r *authRepository) Login(email string, password string) (*string, error) {
-	var user models.User
+	var user models.Users
 	if ans := r.db.Where("email = ?", email).First(&user); ans.Error != nil {
 		return nil, errors.ErrInvalidCredentials
 	}
@@ -51,7 +51,7 @@ func (r *authRepository) Login(email string, password string) (*string, error) {
 }
 
 func (r *authRepository) GetUserInfo(userId string) (*dmodels.User, error) {
-	var userEtt models.User
+	var userEtt models.Users
 	if r.db.Where("id = ?", userId).First(&userEtt).Error != nil {
 		return nil, errors.ErrInvalidCredentials
 	}

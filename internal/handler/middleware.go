@@ -23,7 +23,6 @@ func AuthMiddleware() gin.HandlerFunc {
 			ctx.AbortWithError(http.StatusUnauthorized, errors.ErrUnauthorized)
 			return
 		}
-
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
 			err, _ := json.Marshal(map[string]any{

@@ -19,7 +19,7 @@ type Posts struct {
 	PostParentID *uuid.UUID `gorm:"column:post_parent_id;type:uuid"`
 
 	CommentChildren []*Comments `gorm:"foreignKey:PostID;references:ID;constraint:OnDelete:CASCADE"`
-	Author          User        `gorm:"foreignKey:AuthorID;references:ID"`
+	Author          Users       `gorm:"foreignKey:AuthorID;references:ID"`
 }
 
 func EntityFromPostDomain(p *models.Post) *Posts {
@@ -35,15 +35,18 @@ func EntityFromPostDomain(p *models.Post) *Posts {
 	}
 }
 
-func (p *Posts) ToDomainPost() *models.Post {
+func (p *Posts) ToDomainPost(user *Users) *models.Post {
 	var parent *models.Post
 	if p.PostParentID != nil {
 		parent = &models.Post{ID: p.PostParentID.String()}
 	}
 	var author models.Author
-	if p.Author.ID != uuid.Nil {
+	switch {
+	case user != nil:
+		author = *user.ToDomainAuthor()
+	case p.Author.ID != uuid.Nil:
 		author = *p.Author.ToDomainAuthor()
-	} else {
+	default:
 		author = models.Author{ID: p.AuthorID.String()}
 	}
 

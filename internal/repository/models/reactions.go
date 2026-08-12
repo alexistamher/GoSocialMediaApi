@@ -16,7 +16,7 @@ type Reactions struct {
 	CreatedAt          time.Time `gorm:"column:created_at;not null;default:now()"`
 	DeletedAt          time.Time `gorm:"column:deleted_at"`
 
-	Author User `gorm:"foreignKey:UserID;references:ID"`
+	Author Users `gorm:"foreignKey:UserID;references:ID"`
 }
 
 func EntityFromReactionDomain(reaction *Reactions) *dmodels.Reaction {

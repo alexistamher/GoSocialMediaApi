@@ -96,12 +96,12 @@ func TestCommentRepository_RemoveCommentSuccess(t *testing.T) {
 	comment.ID = rcomment.ID
 	comment.ParentCommentID = &comment.ID
 	rcomment, _ = cmntRepo.AddComment(comment)
-	comments, _ := cmntRepo.GetCommentsByCommentID(*rcomment.ParentCommentID)
-	a.Len(comments, 1)
+	commentDetails, _ := cmntRepo.GetCommentByID(*rcomment.ParentCommentID)
+	a.Len(commentDetails.Comments, 1)
 	err := cmntRepo.DeleteComment(rcomment.ID)
 	a.NoError(err)
-	comments, _ = cmntRepo.GetCommentsByCommentID(rcomment.ID)
-	a.Len(comments, 0)
+	commentDetails, _ = cmntRepo.GetCommentByID(rcomment.ID)
+	a.Len(commentDetails.Comments, 0)
 }
 
 func TestCommentRepository_RemoveNestedCommentSuccess(t *testing.T) {
@@ -212,8 +212,8 @@ func TestCommentRepository_RemoveCommentWithAllReactions_Success(t *testing.T) {
 	a.NoError(err)
 	a.Len(reactions, 0)
 
-	comments, _ := cmntRepo.GetCommentsByCommentID(rpost.ID)
-	a.Len(comments, 0)
+	commentDetails, _ := cmntRepo.GetCommentByID(rpost.ID)
+	a.Len(commentDetails.Comments, 0)
 }
 
 func TestCommentRepository_GetDetailedComments_Success(t *testing.T) {
