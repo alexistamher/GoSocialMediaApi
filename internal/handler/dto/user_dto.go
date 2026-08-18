@@ -1,13 +1,16 @@
 package dto
 
-import "github.com/alexistamher/social-api-go/internal/domain/models"
+import (
+	"github.com/alexistamher/social-api-go/internal/domain/models"
+)
 
 type UserResponse struct {
 	ID          string  `json:"id"`
 	Username    string  `json:"username"`
 	DisplayName string  `json:"display_name"`
+	Email       string  `json:"email"`
 	Bio         *string `json:"bio,omitempty"`
-	AvatarURL   *string `json:"avatar_url,omitempty"`
+	AvatarURL   *string `json:"avatar_url"`
 	CreatedAt   uint    `json:"created_at"`
 	UpdatedAt   uint    `json:"updated_at"`
 }
@@ -17,6 +20,7 @@ func UserDomainToDto(user *models.User) *UserResponse {
 		ID:          user.ID,
 		Username:    user.Username,
 		DisplayName: user.DisplayName,
+		Email:       user.Email,
 		Bio:         user.Bio,
 		AvatarURL:   user.AvatarURL,
 		CreatedAt:   uint(user.CreatedAt.Unix()),
