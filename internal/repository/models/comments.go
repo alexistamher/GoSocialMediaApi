@@ -46,7 +46,6 @@ func EntityFromCommentDomain(comment *dmodels.Comment) *Comments {
 		PostID:          uuid.MustParse(comment.PostID),
 		Content:         comment.Content,
 		ParentCommentID: parentCommentID,
-		CreatedAt:       time.Unix(int64(comment.CreatedAt), 0),
 	}
 }
 
@@ -88,6 +87,6 @@ func (c *CommentsWithAuthor) ToDomainComment() *dmodels.Comment {
 		Author:           *c.Author.ToDomainAuthor(),
 		Content:          c.Content,
 		PreviewReactions: map[string]int{},
-		CreatedAt:        uint64(c.CreatedAt.UnixMilli()),
+		CreatedAt:        uint64(c.CreatedAt.Unix()),
 	}
 }

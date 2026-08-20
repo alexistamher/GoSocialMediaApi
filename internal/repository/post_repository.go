@@ -23,9 +23,9 @@ func (p *postRepository) AddPost(post *dmodels.Post) (*dmodels.Post, error) {
 	}
 
 	var authorEntity *models.Users
-	if err := p.db.Find(&authorEntity).
+	if err := p.db.
 		Select("id", "display_name", "username").
-		Where("id = ?", postEntity.AuthorID).Error; err != nil {
+		Where("id = ?", postEntity.AuthorID).Find(&authorEntity).Error; err != nil {
 		return nil, err
 	}
 

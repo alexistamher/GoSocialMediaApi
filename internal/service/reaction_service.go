@@ -23,7 +23,7 @@ func (r *ReactionService) AddReaction(ctx *gin.Context, req dto.AddReactionReque
 	if err != nil {
 		return err
 	}
-	responseBody := dto.FromDomainReaction(res)
+	responseBody := dto.FromDomainTargetReaction(res)
 	ctx.JSON(http.StatusOK, responseBody)
 	return nil
 }

@@ -59,13 +59,6 @@ func (r *UpdateReactionRequest) ToDomainReaction() *models.Reaction {
 	}
 }
 
-func FromDomainReaction(r *models.Reaction) *CreatedReactionResponse {
-	return &CreatedReactionResponse{
-		ID:        r.ID,
-		CreatedAt: r.CreatedAt,
-	}
-}
-
 func FromDomainTargetReaction(r *models.Reaction) *TargetReactionResponse {
 	return &TargetReactionResponse{
 		ID:           r.ID,

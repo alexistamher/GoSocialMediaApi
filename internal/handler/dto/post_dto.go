@@ -20,7 +20,7 @@ type PostResponse struct {
 	Author           AuthorResponse `json:"author"`
 	CommentsCount    int            `json:"comments_count"`
 	PreviewReactions map[string]int `json:"preview_reactions"`
-	Visibility       string         `json:"visibility" binding:"oneof=friends public"`
+	Visibility       string         `json:"visibility"`
 	CreatedAt        uint64         `json:"created_at"`
 }
 

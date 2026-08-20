@@ -51,6 +51,8 @@ func (u *Users) ToDomainUser() *dmodels.User {
 		DisplayName: u.DisplayName,
 		Bio:         u.Bio,
 		AvatarURL:   u.AvatarURL,
+		CreatedAt:   uint64(u.CreatedAt.Unix()),
+		UpdatedAt:   uint64(u.UpdatedAt.Unix()),
 	}
 }
 

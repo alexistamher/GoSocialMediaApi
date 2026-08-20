@@ -19,15 +19,15 @@ type Reactions struct {
 	Author Users `gorm:"foreignKey:UserID;references:ID"`
 }
 
-func EntityFromReactionDomain(reaction *Reactions) *dmodels.Reaction {
+func EntityFromReactionDomain(reaction *Reactions, author *Users) *dmodels.Reaction {
 	return &dmodels.Reaction{
 		ID:                 reaction.ID.String(),
 		ReactionType:       dmodels.ReactionType(reaction.ReactionType),
 		ReactionTargetType: dmodels.ReactionTargetType(reaction.ReactionTargetType),
 		UserID:             reaction.UserID.String(),
 		TargetID:           reaction.TargetID.String(),
-		CreatedAt:          uint64(reaction.CreatedAt.UnixMilli()),
-		Author:             *reaction.Author.ToDomainAuthor(),
+		CreatedAt:          uint64(reaction.CreatedAt.Unix()),
+		Author:             *author.ToDomainAuthor(),
 	}
 }
 
@@ -38,7 +38,7 @@ func (r *Reactions) ToDomainReaction() *dmodels.Reaction {
 		ReactionTargetType: dmodels.ReactionTargetType(r.ReactionTargetType),
 		UserID:             r.UserID.String(),
 		TargetID:           r.TargetID.String(),
-		CreatedAt:          uint64(r.CreatedAt.UnixMilli()),
+		CreatedAt:          uint64(r.CreatedAt.Unix()),
 		Author:             *r.Author.ToDomainAuthor(),
 	}
 }

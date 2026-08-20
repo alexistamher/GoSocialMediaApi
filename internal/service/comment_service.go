@@ -57,6 +57,9 @@ func (s *commentService) GetCommentsByPostID(c *gin.Context, postID string) erro
 	for i, comment := range comments {
 		rcomments[i] = *dto.ResponseFromDomainComment(comment)
 	}
-	c.JSON(http.StatusOK, rcomments)
+	response := dto.GetCommentsResponse{
+		Comments: rcomments,
+	}
+	c.JSON(http.StatusOK, response)
 	return nil
 }

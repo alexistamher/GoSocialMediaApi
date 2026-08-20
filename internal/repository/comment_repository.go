@@ -22,7 +22,9 @@ func (p *commentRepository) AddComment(comment *dmodels.Comment) (*dmodels.Comme
 	}
 
 	var author *models.Users
-	if err := p.db.Where("id = ?", commentEntity.AuthorID).Find(&author).Error; err != nil {
+	if err := p.db.
+		Select("id", "display_name", "username").
+		Where("id = ?", commentEntity.AuthorID).Find(&author).Error; err != nil {
 		return nil, err
 	}
 

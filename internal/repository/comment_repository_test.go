@@ -36,9 +36,11 @@ func TestCommentRepository_AddCommentToPost_Success(t *testing.T) {
 	post := &models.Post{
 		Content:    "This is a test post",
 		Visibility: models.Public,
-		Author:     models.Author{ID: *userIds[0]},
+		Author:     models.Author{ID: *userIds[1]},
 	}
 	rpost, _ := postRepo.AddPost(post)
+
+	a.Equal(rpost.Author.ID, *userIds[1])
 
 	var commentID *string
 	for i := range 5 {
@@ -184,13 +186,14 @@ func TestCommentRepository_RemoveCommentWithAllReactions_Success(t *testing.T) {
 	post := &models.Post{
 		Content:    "This is a test post",
 		Visibility: models.Public,
-		Author:     models.Author{ID: *userIds[0]},
+		Author:     models.Author{ID: *userIds[1]},
 	}
 	rpost, _ := postRepo.AddPost(post)
+	a.Equal(rpost.Author.ID, *userIds[1])
 
 	comment := &models.Comment{
 		Content:         "this is a comment",
-		Author:          models.Author{ID: *userIds[0]},
+		Author:          models.Author{ID: *userIds[1]},
 		PostID:          rpost.ID,
 		ParentCommentID: nil,
 	}

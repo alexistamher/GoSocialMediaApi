@@ -49,7 +49,7 @@ func New(h Handlers, authMiddleware gin.HandlerFunc) *gin.Engine {
 		private.POST("/reactions", h.Reaction.AddReaction)
 		private.PUT("/reactions", h.Reaction.UpdateReaction)
 		private.GET("/reactions/:target_id", h.Reaction.GetTargetReactions)
-		private.DELETE("/reactions/:target_id", h.Reaction.DeleteReaction)
+		private.DELETE("/reactions/:reaction_id", h.Reaction.DeleteReaction)
 	}
 
 	return r

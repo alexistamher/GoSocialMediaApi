@@ -1,7 +1,5 @@
 package models
 
-import "time"
-
 type User struct {
 	ID          string
 	Username    string
@@ -10,8 +8,8 @@ type User struct {
 	DisplayName string
 	Bio         *string
 	AvatarURL   *string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	CreatedAt   uint64
+	UpdatedAt   uint64
 }
 
 type Author struct {

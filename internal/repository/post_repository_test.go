@@ -20,31 +20,38 @@ func TestPostRespository_AddPost_Success(t *testing.T) {
 	authRepo := repository.NewAuthRepository(tx)
 	postRepo := repository.NewPostRepository(tx)
 
-	user := &models.User{
-		Username:    "JohnC",
-		Password:    "passwordHash",
-		Email:       "jconnor@mail.com",
-		DisplayName: "John Connor",
-	}
+	userIDs := make([]string, 2)
+	for i := range 2 {
+		user := &models.User{
+			Username:    "JohnC" + strconv.Itoa(i),
+			Password:    "passwordHash",
+			Email:       "jconnor" + strconv.Itoa(i) + "@mail.com",
+			DisplayName: "John Connor" + strconv.Itoa(i),
+		}
 
-	UserID, _ := authRepo.Register(user)
+		UserID, _ := authRepo.Register(user)
+		userIDs[i] = *UserID
+	}
 
 	post := &models.Post{
 		Content:    "this is a post test",
 		Visibility: "public",
-		Author:     models.Author{ID: *UserID},
+		Author:     models.Author{ID: userIDs[1]},
 	}
 
 	rpost, _ := postRepo.AddPost(post)
+
+	a.Equal(rpost.Author.ID, userIDs[1])
+
 	post = &models.Post{
 		Content:    "this is a post test with parent",
 		Visibility: models.Friends,
-		Author:     models.Author{ID: *UserID},
+		Author:     models.Author{ID: userIDs[1]},
 		PostParent: rpost,
 	}
 	_, _ = postRepo.AddPost(post)
 
-	posts, _, _ := postRepo.GetPostsByUserID(*UserID, nil, uint(2))
+	posts, _, _ := postRepo.GetPostsByUserID(userIDs[1], nil, uint(2))
 
 	a.Len(posts, 2)
 	a.Equal(posts[1].Content, post.Content)

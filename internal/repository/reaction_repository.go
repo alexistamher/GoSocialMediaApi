@@ -27,7 +27,14 @@ func (p *reactionRepository) AddReaction(postID string, userID string, reactionT
 	if err := p.db.Create(&reaction).Error; err != nil {
 		return nil, err
 	}
-	return models.EntityFromReactionDomain(&reaction), nil
+
+	var authorEntity *models.Users
+	if err := p.db.Select("id", "display_name", "username").
+		Where("id = ?", reaction.UserID).Find(&authorEntity).Error; err != nil {
+		return nil, err
+	}
+
+	return models.EntityFromReactionDomain(&reaction, authorEntity), nil
 }
 
 func (p *reactionRepository) UpdateReaction(reactionID string, reactionType string) error {
@@ -52,12 +59,12 @@ func (p *reactionRepository) DeleteReaction(reactionID string) error {
 
 func (p *reactionRepository) GetTargetReactions(targetID string) ([]*dmodels.Reaction, error) {
 	var reactions []models.Reactions
-	if err := p.db.Where("target_id = ?", targetID).Find(&reactions).Error; err != nil {
+	if err := p.db.Preload("Author").Where("target_id = ?", targetID).Find(&reactions).Error; err != nil {
 		return nil, err
 	}
 	dreactions := make([]*dmodels.Reaction, len(reactions))
 	for i, reaction := range reactions {
-		dreactions[i] = models.EntityFromReactionDomain(&reaction)
+		dreactions[i] = reaction.ToDomainReaction()
 	}
 	return dreactions, nil
 }

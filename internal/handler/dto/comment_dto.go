@@ -17,7 +17,7 @@ type CommentResponse struct {
 	ID               string         `json:"id"`
 	Content          string         `json:"content"`
 	Author           AuthorResponse `json:"author"`
-	PreviewReactions map[string]int `json:"reactions"`
+	PreviewReactions map[string]int `json:"preview_reactions"`
 	CreatedAt        uint64         `json:"created_at"`
 	PostID           string         `json:"post_id"`
 	ParentCommentID  *string        `json:"parent_comment_id"`
@@ -27,6 +27,10 @@ type CommentDetailsResponse struct {
 	ID        string                   `json:"id"`
 	Reactions []TargetReactionResponse `json:"reactions"`
 	Comments  []CommentResponse        `json:"comments"`
+}
+
+type GetCommentsResponse struct {
+	Comments []CommentResponse `json:"comments"`
 }
 
 func (c *AddCommentRequest) ToDomainComment() *dmodels.Comment {

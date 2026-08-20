@@ -129,11 +129,11 @@ func TestPostHandler_Integration_Flow(t *testing.T) {
 
 		r.ServeHTTP(w, req)
 
-		var commentsRes []dto.CommentResponse
+		var commentsRes dto.GetCommentsResponse
 		err = json.Unmarshal(w.Body.Bytes(), &commentsRes)
 
 		assert.NoError(t, err)
-		assert.Len(t, commentsRes, 1)
+		assert.Len(t, commentsRes.Comments, 1)
 	})
 
 	t.Run("4. Insert comment into another comment and get comments inside the comment", func(t *testing.T) {

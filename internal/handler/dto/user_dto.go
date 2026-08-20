@@ -23,8 +23,8 @@ func UserDomainToDto(user *models.User) *UserResponse {
 		Email:       user.Email,
 		Bio:         user.Bio,
 		AvatarURL:   user.AvatarURL,
-		CreatedAt:   uint(user.CreatedAt.Unix()),
-		UpdatedAt:   uint(user.UpdatedAt.Unix()),
+		CreatedAt:   uint(user.CreatedAt),
+		UpdatedAt:   uint(user.UpdatedAt),
 	}
 }
 
