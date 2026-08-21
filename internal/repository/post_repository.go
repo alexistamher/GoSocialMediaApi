@@ -4,6 +4,7 @@ import (
 	dmodels "github.com/alexistamher/social-api-go/internal/domain/models"
 	drepository "github.com/alexistamher/social-api-go/internal/domain/repository"
 	"github.com/alexistamher/social-api-go/internal/repository/models"
+	"github.com/google/uuid"
 
 	"gorm.io/gorm"
 )
@@ -161,10 +162,16 @@ func (p *postRepository) GetPostsByUserID(userID string, offset *int, limit uint
 		return nil, nil, err
 	}
 
+	commentCounts, err := getCommentsCountByPostIDs(p.db, postIDs)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	dpost := make([]*dmodels.Post, len(posts))
 	for i, post := range posts {
 		post := post.ToDomainPost(nil)
 		post.PreviewReactions = reactions[post.ID]
+		post.CommentsCount = commentCounts[post.ID]
 		dpost[i] = post
 	}
 
@@ -175,6 +182,30 @@ func (p *postRepository) GetPostsByUserID(userID string, offset *int, limit uint
 	nextOffset := currentOffset + len(posts)
 
 	return dpost, &nextOffset, nil
+}
+
+func getCommentsCountByPostIDs(db *gorm.DB, postIDs []string) (map[string]int, error) {
+	if len(postIDs) == 0 {
+		return map[string]int{}, nil
+	}
+
+	var results []struct {
+		PostID uuid.UUID
+		Count  int
+	}
+	if err := db.Table("comments").
+		Select("post_id, count(id) as count").
+		Where("post_id IN ?", postIDs).
+		Group("post_id").
+		Scan(&results).Error; err != nil {
+		return nil, err
+	}
+
+	counts := make(map[string]int)
+	for _, r := range results {
+		counts[r.PostID.String()] = r.Count
+	}
+	return counts, nil
 }
 
 func (p *postRepository) GetCommentsByPostID(postID string) ([]*dmodels.Comment, error) {
