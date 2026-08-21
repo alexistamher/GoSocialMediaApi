@@ -44,6 +44,13 @@ type GetTargetReactionsRequest struct {
 	ReactionTargetType string `json:"reaction_target_type" binding:"required"`
 }
 
+type PreviewReactionResponse struct {
+	ID           string `json:"id"`
+	ReactionType string `json:"reaction_type"`
+	TargetID     string `json:"target_id"`
+	AuthorID     string `json:"author_id"`
+}
+
 func (r *AddReactionRequest) ToDomainReaction() *models.Reaction {
 	return &models.Reaction{
 		TargetID:           r.TargetID,
@@ -66,5 +73,14 @@ func FromDomainTargetReaction(r *models.Reaction) *TargetReactionResponse {
 		ReactionType: string(r.ReactionType),
 		CreatedAt:    r.CreatedAt,
 		Author:       AuthorResponse(r.Author),
+	}
+}
+
+func ResponseFromDomainPreviewReaction(r *models.PreviewReaction) *PreviewReactionResponse {
+	return &PreviewReactionResponse{
+		ID:           r.ID,
+		ReactionType: string(r.ReactionType),
+		TargetID:     r.TargetID,
+		AuthorID:     r.AuthorID,
 	}
 }

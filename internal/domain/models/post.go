@@ -12,18 +12,18 @@ type Post struct {
 	Content          string
 	Author           Author
 	CommentsCount    int
-	PreviewReactions map[string]int
+	PreviewReactions []PreviewReaction
 	Visibility       PostVisibility
 	PostParent       *Post
 	CreatedAt        uint64
 }
 
 type PostWithDetails struct {
-	ID         string
-	Content    string
-	Author     Author
-	Reactions  []Reaction
-	Comments   []Comment
-	Visibility PostVisibility
-	CreatedAt  uint64
+	ID               string
+	Content          string
+	Author           Author
+	PreviewReactions []PreviewReaction
+	Comments         []Comment
+	Visibility       PostVisibility
+	CreatedAt        uint64
 }

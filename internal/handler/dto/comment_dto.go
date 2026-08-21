@@ -14,13 +14,13 @@ type CreatedCommentResponse struct {
 }
 
 type CommentResponse struct {
-	ID               string         `json:"id"`
-	Content          string         `json:"content"`
-	Author           AuthorResponse `json:"author"`
-	PreviewReactions map[string]int `json:"preview_reactions"`
-	CreatedAt        uint64         `json:"created_at"`
-	PostID           string         `json:"post_id"`
-	ParentCommentID  *string        `json:"parent_comment_id"`
+	ID               string                    `json:"id"`
+	Content          string                    `json:"content"`
+	Author           AuthorResponse            `json:"author"`
+	PreviewReactions []PreviewReactionResponse `json:"preview_reactions"`
+	CreatedAt        uint64                    `json:"created_at"`
+	PostID           string                    `json:"post_id"`
+	ParentCommentID  *string                   `json:"parent_comment_id"`
 }
 
 type CommentDetailsResponse struct {
@@ -43,11 +43,16 @@ func (c *AddCommentRequest) ToDomainComment() *dmodels.Comment {
 }
 
 func ResponseFromDomainComment(c *dmodels.Comment) *CommentResponse {
+	preactions := make([]PreviewReactionResponse, len(c.PreviewReactions))
+	for i, reaction := range c.PreviewReactions {
+		preactions[i] = *ResponseFromDomainPreviewReaction(&reaction)
+	}
+
 	return &CommentResponse{
 		ID:               c.ID,
 		Content:          c.Content,
 		Author:           *ResponseFromDomainAuthor(&c.Author),
-		PreviewReactions: map[string]int{}, // TODO: falta obtener los datos de la base de datos
+		PreviewReactions: preactions,
 		CreatedAt:        c.CreatedAt,
 		PostID:           c.PostID,
 		ParentCommentID:  c.ParentCommentID,

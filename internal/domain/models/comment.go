@@ -5,7 +5,7 @@ type Comment struct {
 	Author           Author
 	ParentCommentID  *string
 	Content          string
-	PreviewReactions map[string]int
+	PreviewReactions []PreviewReaction
 	PostID           string
 	CreatedAt        uint64
 }

@@ -96,6 +96,11 @@ func (p *postRepository) GetAllPosts(userID string, offset *int, limit *int) ([]
 		return nil, nil, err
 	}
 
+	commentCounts, err := getCommentsCountByPostIDs(p.db, postIDs)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	reactions, err := getPreviewReactionsByIDs(p.db, postIDs)
 	if err != nil {
 		return nil, nil, err
@@ -103,9 +108,14 @@ func (p *postRepository) GetAllPosts(userID string, offset *int, limit *int) ([]
 
 	dposts := make([]*dmodels.Post, len(posts))
 	for i, post := range posts {
-		dpost := post.ToDomainPost(nil)
-		dpost.PreviewReactions = reactions[post.ID.String()]
-		dposts[i] = dpost
+		dreactions := reactions[post.ID.String()]
+		post := post.ToDomainPost(nil)
+		if prevReactions, ok := reactions[post.ID]; ok {
+			dreactions = prevReactions
+		}
+		post.PreviewReactions = dreactions
+		post.CommentsCount = commentCounts[post.ID]
+		dposts[i] = post
 	}
 
 	currentOffset := 0
@@ -122,12 +132,13 @@ func (p *postRepository) GetPostByID(postID string) (*dmodels.PostWithDetails, e
 	if err := p.db.Preload("Author").Where("id = ?", postID).First(&post).Error; err != nil {
 		return nil, err
 	}
-	reactions, err := getReactionsByTargetId(p.db, postID)
+	reactions, err := getPreviewReactionsByIDs(p.db, []string{postID})
 	if err != nil {
 		return nil, err
 	}
 
-	rpost := post.ToDomainPostWithDetails(reactions)
+	dreactions := reactions[postID]
+	rpost := post.ToDomainPostWithDetails(&dreactions)
 
 	return rpost, nil
 }
@@ -169,8 +180,12 @@ func (p *postRepository) GetPostsByUserID(userID string, offset *int, limit uint
 
 	dpost := make([]*dmodels.Post, len(posts))
 	for i, post := range posts {
+		dreactions := reactions[post.ID.String()]
 		post := post.ToDomainPost(nil)
-		post.PreviewReactions = reactions[post.ID]
+		if prevReactions, ok := reactions[post.ID]; ok {
+			dreactions = prevReactions
+		}
+		post.PreviewReactions = dreactions
 		post.CommentsCount = commentCounts[post.ID]
 		dpost[i] = post
 	}

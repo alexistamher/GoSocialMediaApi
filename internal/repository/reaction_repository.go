@@ -96,7 +96,24 @@ func getReactionsByTargetId(db *gorm.DB, targetID string) ([]*models.Reactions, 
 	return reactions, nil
 }
 
-func getPreviewReactionsByIDs(db *gorm.DB, targetIDs []string) (map[string]map[string]int, error) {
+func getPreviewReactionsByIDs(db *gorm.DB, targetIDs []string) (map[string][]dmodels.PreviewReaction, error) {
+	reactionx := make(map[string][]dmodels.PreviewReaction)
+	var reactions []*models.Reactions
+	if err := db.Select("id", "reaction_type", "target_id", "user_id").Where("target_id IN ?", targetIDs).Find(&reactions).Error; err != nil {
+		return nil, err
+	}
+
+	for _, reaction := range reactions {
+		targetKey := reaction.TargetID.String()
+		if _, ok := reactionx[targetKey]; !ok {
+			reactionx[targetKey] = []dmodels.PreviewReaction{}
+		}
+		reactionx[targetKey] = append(reactionx[targetKey], *reaction.ToPreviewDomain())
+	}
+	return reactionx, nil
+}
+
+func getPreviewReactionCountsByIDs(db *gorm.DB, targetIDs []string) (map[string]map[string]int, error) {
 	reactionx := make(map[string]map[string]int)
 	var reactions []models.Reactions
 	if err := db.Where("target_id IN ?", targetIDs).Find(&reactions).Error; err != nil {
@@ -104,13 +121,11 @@ func getPreviewReactionsByIDs(db *gorm.DB, targetIDs []string) (map[string]map[s
 	}
 
 	for _, reaction := range reactions {
-		if _, ok := reactionx[reaction.TargetID.String()]; !ok {
-			reactionx[reaction.TargetID.String()] = map[string]int{
-				reaction.ReactionType: 1,
-			}
-		} else {
-			reactionx[reaction.TargetID.String()][reaction.ReactionType]++
+		targetKey := reaction.TargetID.String()
+		if _, ok := reactionx[targetKey]; !ok {
+			reactionx[targetKey] = make(map[string]int)
 		}
+		reactionx[targetKey][reaction.ReactionType]++
 	}
 	return reactionx, nil
 }

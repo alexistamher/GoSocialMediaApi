@@ -86,7 +86,7 @@ func (c *CommentsWithAuthor) ToDomainComment() *dmodels.Comment {
 		ParentCommentID:  parentCommentID,
 		Author:           *c.Author.ToDomainAuthor(),
 		Content:          c.Content,
-		PreviewReactions: map[string]int{},
+		PreviewReactions: []dmodels.PreviewReaction{},
 		CreatedAt:        uint64(c.CreatedAt.Unix()),
 	}
 }

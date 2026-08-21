@@ -118,9 +118,21 @@ func (p *commentRepository) GetCommentsByPostID(postID string) ([]*dmodels.Comme
 		return nil, err
 	}
 
+	commentIDs := make([]string, len(comments))
+	for i, comment := range comments {
+		commentIDs[i] = comment.ID.String()
+	}
+
+	preactions, err := getPreviewReactionsByIDs(p.db, commentIDs)
+	if err != nil {
+		return nil, err
+	}
+
 	dcomments := make([]*dmodels.Comment, len(comments))
 	for i, c := range comments {
-		dcomments[i] = c.ToDomainComment()
+		comment := c.ToDomainComment()
+		comment.PreviewReactions = preactions[c.ID.String()]
+		dcomments[i] = comment
 	}
 
 	return dcomments, nil

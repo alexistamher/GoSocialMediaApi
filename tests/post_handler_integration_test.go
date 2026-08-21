@@ -205,15 +205,14 @@ func TestPostHandler_Integration_Flow(t *testing.T) {
 		err = json.Unmarshal(w.Body.Bytes(), &postRes)
 
 		assert.NoError(t, err)
-		assert.NotEmpty(t, postRes.Reactions)
+		assert.NotEmpty(t, postRes.PreviewReactions)
 
-		reaction := postRes.Reactions[0]
+		reaction := postRes.PreviewReactions[0]
 
 		assert.NotNil(t, reaction)
 		assert.NotEmpty(t, reaction.ID)
 		assert.NotEmpty(t, reaction.ReactionType)
 		assert.NotEmpty(t, reaction.TargetID)
-		assert.NotEmpty(t, reaction.CreatedAt)
 	})
 
 	t.Run("6. Insert reaction at comment and then retrieve it", func(t *testing.T) {

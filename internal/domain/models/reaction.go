@@ -26,3 +26,10 @@ type Reaction struct {
 	CreatedAt          uint64
 	Author             Author
 }
+
+type PreviewReaction struct {
+	ID           string
+	ReactionType ReactionType
+	TargetID     string
+	AuthorID     string
+}

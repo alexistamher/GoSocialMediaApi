@@ -42,3 +42,12 @@ func (r *Reactions) ToDomainReaction() *dmodels.Reaction {
 		Author:             *r.Author.ToDomainAuthor(),
 	}
 }
+
+func (r *Reactions) ToPreviewDomain() *dmodels.PreviewReaction {
+	return &dmodels.PreviewReaction{
+		ID:           r.ID.String(),
+		ReactionType: dmodels.ReactionType(r.ReactionType),
+		TargetID:     r.TargetID.String(),
+		AuthorID:     r.UserID.String(),
+	}
+}

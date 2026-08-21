@@ -57,12 +57,12 @@ func (p *Posts) ToDomainPost(user *Users) *models.Post {
 		CreatedAt:        uint64(p.CreatedAt.Unix()),
 		Author:           author,
 		PostParent:       parent,
-		CommentsCount:    0,                // TODO: esto deberia ser obtenido
-		PreviewReactions: map[string]int{}, // TODO: esto deberia ser obtenido
+		CommentsCount:    0,                          // TODO: esto deberia ser obtenido
+		PreviewReactions: []models.PreviewReaction{}, // TODO: esto deberia ser obtenido
 	}
 }
 
-func (p *Posts) ToDomainPostWithDetails(reactions []*Reactions) *models.PostWithDetails {
+func (p *Posts) ToDomainPostWithDetails(dreactions *[]models.PreviewReaction) *models.PostWithDetails {
 	var author models.Author
 	if p.Author.ID != uuid.Nil {
 		author = *p.Author.ToDomainAuthor()
@@ -70,17 +70,12 @@ func (p *Posts) ToDomainPostWithDetails(reactions []*Reactions) *models.PostWith
 		author = models.Author{ID: p.AuthorID.String()}
 	}
 
-	dreactions := make([]models.Reaction, len(reactions))
-	for i, r := range reactions {
-		dreactions[i] = *r.ToDomainReaction()
-	}
-
 	return &models.PostWithDetails{
-		ID:         p.ID.String(),
-		Content:    p.Content,
-		Visibility: models.PostVisibility(p.Visibility),
-		CreatedAt:  uint64(p.CreatedAt.Unix()),
-		Author:     author,
-		Reactions:  dreactions,
+		ID:               p.ID.String(),
+		Content:          p.Content,
+		Visibility:       models.PostVisibility(p.Visibility),
+		CreatedAt:        uint64(p.CreatedAt.Unix()),
+		Author:           author,
+		PreviewReactions: *dreactions,
 	}
 }
