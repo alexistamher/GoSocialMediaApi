@@ -47,6 +47,23 @@ func (s *commentService) DeleteComment(c *gin.Context, commentID string) error {
 	return nil
 }
 
+func (s *commentService) GetCommentsByCommentID(c *gin.Context, commentID string) error {
+	comments, err := s.repo.GetCommentsByCommentID(commentID)
+	if err != nil {
+		return err
+	}
+
+	rcomments := make([]dto.CommentResponse, len(comments))
+	for i, comment := range comments {
+		rcomments[i] = *dto.ResponseFromDomainComment(comment)
+	}
+	response := dto.GetCommentsResponse{
+		Comments: rcomments,
+	}
+	c.JSON(http.StatusOK, response)
+	return nil
+}
+
 func (s *commentService) GetCommentsByPostID(c *gin.Context, postID string) error {
 	comments, err := s.repo.GetCommentsByPostID(postID)
 	if err != nil {

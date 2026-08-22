@@ -42,7 +42,7 @@ func (p *postRepository) DeletePost(postID string) error {
 			return err
 		}
 
-		if err := tx.Where("target_id = ? AND target_type = 'post'", postID).
+		if err := tx.Unscoped().Where("target_id = ? AND target_type = 'post'", postID).
 			Delete(&models.Reactions{}).Error; err != nil {
 			return err
 		}

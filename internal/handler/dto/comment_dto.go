@@ -17,6 +17,7 @@ type CommentResponse struct {
 	ID               string                    `json:"id"`
 	Content          string                    `json:"content"`
 	Author           AuthorResponse            `json:"author"`
+	CommentsCount    uint                      `json:"comments_count"`
 	PreviewReactions []PreviewReactionResponse `json:"preview_reactions"`
 	CreatedAt        uint64                    `json:"created_at"`
 	PostID           string                    `json:"post_id"`
@@ -52,6 +53,7 @@ func ResponseFromDomainComment(c *dmodels.Comment) *CommentResponse {
 		ID:               c.ID,
 		Content:          c.Content,
 		Author:           *ResponseFromDomainAuthor(&c.Author),
+		CommentsCount:    c.CommentsCount,
 		PreviewReactions: preactions,
 		CreatedAt:        c.CreatedAt,
 		PostID:           c.PostID,

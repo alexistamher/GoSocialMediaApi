@@ -86,6 +86,7 @@ func (c *CommentsWithAuthor) ToDomainComment() *dmodels.Comment {
 		ParentCommentID:  parentCommentID,
 		Author:           *c.Author.ToDomainAuthor(),
 		Content:          c.Content,
+		CommentsCount:    0, // TODO: evaluar si debería existir este campo
 		PreviewReactions: []dmodels.PreviewReaction{},
 		CreatedAt:        uint64(c.CreatedAt.Unix()),
 	}

@@ -4,6 +4,7 @@ import (
 	dmodels "github.com/alexistamher/social-api-go/internal/domain/models"
 	"github.com/alexistamher/social-api-go/internal/domain/repository"
 	"github.com/alexistamher/social-api-go/internal/repository/models"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -48,7 +49,7 @@ func deleteCommentAndChildren(tx *gorm.DB, commentID string) error {
 	}
 
 	var reactionIds []string
-	if err := tx.Model(&models.Reactions{}).
+	if err := tx.Unscoped().Model(&models.Reactions{}).
 		Where("target_id = ? AND target_type = 'comment'", commentID).
 		Pluck("id", &reactionIds).Error; err != nil {
 		return err
@@ -62,7 +63,7 @@ func deleteCommentAndChildren(tx *gorm.DB, commentID string) error {
 		}
 	}
 
-	if err := tx.Where("id = ?", commentID).Delete(&models.Comments{}).Error; err != nil {
+	if err := tx.Unscoped().Where("id = ?", commentID).Delete(&models.Comments{}).Error; err != nil {
 		return err
 	}
 
@@ -128,12 +129,78 @@ func (p *commentRepository) GetCommentsByPostID(postID string) ([]*dmodels.Comme
 		return nil, err
 	}
 
+	ccounters, err := getCommentsCountByCommentsIDs(p.db, commentIDs)
+	if err != nil {
+		return nil, err
+	}
+
 	dcomments := make([]*dmodels.Comment, len(comments))
 	for i, c := range comments {
+		counter := ccounters[c.ID.String()]
 		comment := c.ToDomainComment()
 		comment.PreviewReactions = preactions[c.ID.String()]
+		comment.CommentsCount = uint(counter)
 		dcomments[i] = comment
 	}
 
 	return dcomments, nil
+}
+
+func (p *commentRepository) GetCommentsByCommentID(commentID string) ([]*dmodels.Comment, error) {
+	var comments []models.CommentsWithAuthor
+	if err := p.db.Preload("Author").
+		Where("parent_comment_id = ?", commentID).Find(&comments).Error; err != nil {
+		return nil, err
+	}
+
+	commentIDs := make([]string, len(comments))
+	for i, comment := range comments {
+		commentIDs[i] = comment.ID.String()
+	}
+
+	preactions, err := getPreviewReactionsByIDs(p.db, commentIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	ccounters, err := getCommentsCountByCommentsIDs(p.db, commentIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	dcomments := make([]*dmodels.Comment, len(comments))
+	for i, c := range comments {
+		counter := ccounters[c.ID.String()]
+		comment := c.ToDomainComment()
+		comment.PreviewReactions = preactions[c.ID.String()]
+		comment.CommentsCount = uint(counter)
+		dcomments[i] = comment
+	}
+
+	return dcomments, nil
+}
+
+func getCommentsCountByCommentsIDs(db *gorm.DB, commentIDs []string) (map[string]int, error) {
+	if len(commentIDs) == 0 {
+		return map[string]int{}, nil
+	}
+
+	var results []struct {
+		CommentID uuid.UUID
+		Count     int
+	}
+	if err := db.Table("comments").
+		Select("parent_comment_id as comment_id, count(parent_comment_id) as count").
+		Where("parent_comment_id IN ?", commentIDs).
+		Group("parent_comment_id").
+		Scan(&results).Error; err != nil {
+
+		return nil, err
+	}
+
+	counts := make(map[string]int)
+	for _, r := range results {
+		counts[r.CommentID.String()] = r.Count
+	}
+	return counts, nil
 }
