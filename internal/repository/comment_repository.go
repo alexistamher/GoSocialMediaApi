@@ -149,7 +149,20 @@ func (p *commentRepository) GetCommentsByPostID(postID string) ([]*dmodels.Comme
 func (p *commentRepository) GetCommentsByCommentID(commentID string) ([]*dmodels.Comment, error) {
 	var comments []models.CommentsWithAuthor
 	if err := p.db.Preload("Author").
-		Where("parent_comment_id = ?", commentID).Find(&comments).Error; err != nil {
+		Raw(`
+	        WITH RECURSIVE comment_tree AS (
+	            SELECT id, content, author_id, post_id, parent_comment_id, created_at, 1 AS depth
+	            FROM comments
+	            WHERE parent_comment_id = ?
+
+	            UNION ALL
+
+	            SELECT c.id, c.content, c.author_id, c.post_id, c.parent_comment_id, c.created_at, ct.depth + 1
+	            FROM comments c
+	            INNER JOIN comment_tree ct ON c.parent_comment_id = ct.id
+	        )
+	        SELECT * FROM comment_tree ORDER BY depth, created_at
+		`, commentID).Find(&comments).Error; err != nil {
 		return nil, err
 	}
 
@@ -189,12 +202,22 @@ func getCommentsCountByCommentsIDs(db *gorm.DB, commentIDs []string) (map[string
 		CommentID uuid.UUID
 		Count     int
 	}
-	if err := db.Table("comments").
-		Select("parent_comment_id as comment_id, count(parent_comment_id) as count").
-		Where("parent_comment_id IN ?", commentIDs).
-		Group("parent_comment_id").
-		Scan(&results).Error; err != nil {
+	if err := db.Raw(`
+		WITH RECURSIVE comment_tree AS (
+            SELECT id, parent_comment_id AS root_id
+            FROM comments
+            WHERE parent_comment_id IN ?
 
+            UNION ALL
+
+            SELECT c.id, ct.root_id
+            FROM comments c
+            INNER JOIN comment_tree ct ON c.parent_comment_id = ct.id
+        )
+        SELECT root_id as comment_id, COUNT(*) AS count
+        FROM comment_tree
+        GROUP BY root_id
+	`, commentIDs).Scan(&results).Error; err != nil {
 		return nil, err
 	}
 
