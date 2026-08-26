@@ -31,6 +31,19 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 	}
 }
 
+func (h *PostHandler) GetAllPosts(c *gin.Context) {
+	userID := c.Value(UserIDKey).(string)
+	if userID == "" {
+		respondError(c, errors.ErrBadRequest)
+		return
+	}
+
+	if err := h.postService.GetAllPosts(c); err != nil {
+		respondError(c, errors.ErrInternalServerError)
+		return
+	}
+}
+
 func (h *PostHandler) GetPostByID(c *gin.Context) {
 	postID := c.Param("post_id")
 	if postID == "" {

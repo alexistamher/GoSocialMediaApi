@@ -348,7 +348,7 @@ func TestPostRepository_GetDetailedPosts(t *testing.T) {
 
 	offset := int(0)
 	limit := int(20)
-	posts, _, _ := postRepo.GetAllPosts(usedIDs[0], &offset, &limit)
+	posts, _, _ := postRepo.GetAllPosts(&offset, uint(limit))
 
 	post = posts[0]
 	a.Equal(post.Author.ID, usedIDs[0])

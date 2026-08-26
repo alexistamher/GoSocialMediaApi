@@ -38,6 +38,7 @@ func New(h Handlers, authMiddleware gin.HandlerFunc) *gin.Engine {
 
 		private.POST("/posts", h.Post.CreatePost)
 		private.GET("/posts", h.Post.GetUserPosts)
+		private.GET("/posts/all", h.Post.GetAllPosts)
 		private.GET("/posts/:post_id", h.Post.GetPostByID)
 		private.DELETE("/posts/:post_id", h.Post.DeletePost)
 

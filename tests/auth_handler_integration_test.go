@@ -16,6 +16,8 @@ import (
 )
 
 func TestAuthHandler_Integration_Flow(t *testing.T) {
+	t.Setenv("JWT_SECRET", "mock_secret")
+	t.Setenv("JWT_LIFETIME", "2")
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
 	}

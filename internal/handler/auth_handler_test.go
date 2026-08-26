@@ -27,6 +27,8 @@ func TestMain(m *testing.M) {
 }
 
 func validToken(t *testing.T) (token string, userID string) {
+	t.Setenv("JWT_SECRET", "mock_secret")
+	t.Setenv("JWT_LIFETIME", "2")
 	t.Helper()
 	userID = "ae122adc-22c0-4d4b-a3c2-170ef99cfb5c"
 	var err error

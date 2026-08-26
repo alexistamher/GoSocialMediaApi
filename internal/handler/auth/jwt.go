@@ -2,6 +2,7 @@ package auth
 
 import (
 	"os"
+	"strconv"
 	"time"
 
 	errors "github.com/alexistamher/social-api-go/internal/domain"
@@ -17,12 +18,16 @@ type Claims struct {
 
 func GenerateToken(userID string) (string, error) {
 	secretKey := []byte(os.Getenv("JWT_SECRET"))
+	lifetime, err := strconv.Atoi(os.Getenv("JWT_LIFETIME"))
+	if err != nil {
+		panic("jwt lifetime config failed: " + err.Error())
+	}
 
 	claims := Claims{
 		UserID: userID,
 		Jti:    uuid.NewString(),
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(12 * time.Hour)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(lifetime) * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}

@@ -45,6 +45,26 @@ func (s *PostService) GetUserPosts(c *gin.Context, userID string) error {
 	return nil
 }
 
+func (s *PostService) GetAllPosts(c *gin.Context) error {
+	posts, nextCursor, err := s.repo.GetAllPosts(nil, 10)
+	if err != nil {
+		return err
+	}
+
+	rposts := make([]*dto.PostResponse, len(posts))
+	for i, post := range posts {
+		rposts[i] = dto.ResponseFromDomainPost(post)
+	}
+
+	response := map[string]any{
+		"next_cursor": nextCursor,
+		"posts":       rposts,
+	}
+
+	c.JSON(http.StatusOK, response)
+	return nil
+}
+
 func (s *PostService) CreatePost(c *gin.Context, req dto.CreatePostRequest) error {
 	post := req.ToDomainPost()
 	post, err := s.repo.AddPost(post)

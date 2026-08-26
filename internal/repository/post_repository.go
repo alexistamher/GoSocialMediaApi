@@ -66,38 +66,28 @@ func (p *postRepository) DeletePost(postID string) error {
 	return nil
 }
 
-func (p *postRepository) GetAllPosts(userID string, offset *int, limit *int) ([]*dmodels.Post, *int, error) {
+func (p *postRepository) GetAllPosts(offset *int, limit uint) ([]*dmodels.Post, *int, error) {
 	var postIDs []string
 	var posts []*models.Posts
-	// var total int64
+	var total int64
 
-	if err := p.db.Table("posts").
-		Select("id").
-		Where("author_id = ?", userID).
-		Pluck("id", &postIDs).Error; err != nil {
+	if err := p.db.Table("posts").Where("visibility = 'public'").Pluck("id", &postIDs).Error; err != nil {
 		return nil, nil, err
 	}
 
-	baseQuery := p.db.Preload("Author").Where("id IN ?", postIDs)
+	baseQuery := p.db.Preload("Author").Model(&models.Posts{}).Where("id IN ?", postIDs)
 
-	// if err := baseQuery.Table("posts").Count(&total).Error; err != nil {
-	// 	return nil, nil, err
-	// }
+	if err := baseQuery.Count(&total).Error; err != nil {
+		return nil, nil, err
+	}
 
 	query := baseQuery.Order("created_at desc")
 	if offset != nil {
 		query = query.Offset(*offset)
 	}
-	if limit != nil {
-		query = query.Limit(*limit)
-	}
+	query = query.Limit(int(limit))
 
 	if err := query.Find(&posts).Error; err != nil {
-		return nil, nil, err
-	}
-
-	commentCounts, err := getCommentsCountByPostIDs(p.db, postIDs)
-	if err != nil {
 		return nil, nil, err
 	}
 
@@ -106,7 +96,12 @@ func (p *postRepository) GetAllPosts(userID string, offset *int, limit *int) ([]
 		return nil, nil, err
 	}
 
-	dposts := make([]*dmodels.Post, len(posts))
+	commentCounts, err := getCommentsCountByPostIDs(p.db, postIDs)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	dpost := make([]*dmodels.Post, len(posts))
 	for i, post := range posts {
 		dreactions := reactions[post.ID.String()]
 		post := post.ToDomainPost(nil)
@@ -115,7 +110,7 @@ func (p *postRepository) GetAllPosts(userID string, offset *int, limit *int) ([]
 		}
 		post.PreviewReactions = dreactions
 		post.CommentsCount = commentCounts[post.ID]
-		dposts[i] = post
+		dpost[i] = post
 	}
 
 	currentOffset := 0
@@ -124,7 +119,7 @@ func (p *postRepository) GetAllPosts(userID string, offset *int, limit *int) ([]
 	}
 	nextOffset := currentOffset + len(posts)
 
-	return dposts, &nextOffset, nil
+	return dpost, &nextOffset, nil
 }
 
 func (p *postRepository) GetPostByID(postID string) (*dmodels.PostWithDetails, error) {
