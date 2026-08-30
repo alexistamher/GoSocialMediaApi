@@ -221,7 +221,7 @@ func TestPostRepository_RemoveReactionFromTarget(t *testing.T) {
 
 	reactions, _ := reacRepo.GetTargetReactions(rpost.ID)
 	a.Len(reactions, 1)
-	err := reacRepo.DeleteReaction(rpostReaction.ID)
+	_, err := reacRepo.DeleteReaction(rpostReaction.ID)
 	a.NoError(err)
 	reactions, _ = reacRepo.GetTargetReactions(rpost.ID)
 	a.Len(reactions, 0)

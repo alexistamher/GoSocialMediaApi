@@ -1,0 +1,3 @@
+[submodule "proto/external/socialmedia"]
+	path = proto/external/socialmedia
+	url = https://github.com/alexistamher/SocialMediaProtos.git

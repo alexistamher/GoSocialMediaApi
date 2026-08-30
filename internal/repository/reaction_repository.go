@@ -37,24 +37,27 @@ func (p *reactionRepository) AddReaction(postID string, userID string, reactionT
 	return models.EntityFromReactionDomain(&reaction, authorEntity), nil
 }
 
-func (p *reactionRepository) UpdateReaction(reactionID string, reactionType string) error {
+func (p *reactionRepository) UpdateReaction(reactionID string, reactionType string) (*dmodels.Reaction, error) {
 	var reaction models.Reactions
 	if err := p.db.Where("id = ?", reactionID).First(&reaction).Error; err != nil {
-		return err
+		return nil, err
 	}
 	reaction.ReactionType = reactionType
 	if err := p.db.Save(&reaction).Error; err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return reaction.ToDomainReaction(), nil
 }
 
-func (p *reactionRepository) DeleteReaction(reactionID string) error {
+func (p *reactionRepository) DeleteReaction(reactionID string) (*dmodels.Reaction, error) {
 	var reaction models.Reactions
-	if err := p.db.Where("id = ?", reactionID).Delete(&reaction).Error; err != nil {
-		return err
+	if err := p.db.Where("id = ?", reactionID).First(&reaction).Error; err != nil {
+		return nil, err
 	}
-	return nil
+	if err := p.db.Delete(&reaction).Error; err != nil {
+		return nil, err
+	}
+	return reaction.ToDomainReaction(), nil
 }
 
 func (p *reactionRepository) GetTargetReactions(targetID string) ([]*dmodels.Reaction, error) {

@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/alexistamher/social-api-go/internal/domain/notification"
 	"github.com/alexistamher/social-api-go/internal/handler"
 	"github.com/alexistamher/social-api-go/internal/handler/dto"
 	"github.com/alexistamher/social-api-go/internal/repository"
@@ -33,7 +34,7 @@ func TestPostHandler_Integration_Flow(t *testing.T) {
 	cmntRepo := repository.NewCommentRepository(db)
 	cmntSvc := service.NewCommentService(cmntRepo)
 	reacRepo := repository.NewReactionRepository(db)
-	reacSvc := service.NewReactionService(reacRepo)
+	reacSvc := service.NewReactionService(reacRepo, notification.NoopNotifier{})
 
 	handlers := router.Handlers{
 		Auth:     handler.NewAuthHandler(authSvc),
