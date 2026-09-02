@@ -1,11 +1,11 @@
 package service
 
 import (
-	"context"
-
 	"github.com/alexistamher/social-api-go/internal/domain/repository"
 	"github.com/alexistamher/social-api-go/internal/handler/auth"
 	"github.com/alexistamher/social-api-go/internal/handler/dto"
+	"github.com/alexistamher/social-api-go/internal/util"
+	"github.com/gin-gonic/gin"
 )
 
 type authService struct {
@@ -18,7 +18,7 @@ func NewAuthService(repo repository.AuthRepository) AuthService {
 	}
 }
 
-func (s *authService) Register(ctx context.Context, req dto.RegisterRequest) (*dto.AuthResponse, error) {
+func (s *authService) Register(ctx *gin.Context, req dto.RegisterRequest) (*dto.AuthResponse, error) {
 	userID, erro := s.repo.Register(dto.DtoAuthResponseToDomain(&req))
 	if erro != nil {
 		return nil, erro
@@ -34,7 +34,7 @@ func (s *authService) Register(ctx context.Context, req dto.RegisterRequest) (*d
 	}, nil
 }
 
-func (s *authService) Login(ctx context.Context, req dto.LoginRequest) (*dto.AuthResponse, error) {
+func (s *authService) Login(ctx *gin.Context, req dto.LoginRequest) (*dto.AuthResponse, error) {
 	userID, erro := s.repo.Login(req.Email, req.Password)
 	if erro != nil {
 		return nil, erro
@@ -44,13 +44,14 @@ func (s *authService) Login(ctx context.Context, req dto.LoginRequest) (*dto.Aut
 		return nil, erro
 	}
 
+	go util.CallExternalService(ctx, *userID)
 	return &dto.AuthResponse{
 		AccessToken:  token,
 		RefreshToken: token,
 	}, nil
 }
 
-func (s *authService) GetInfo(ctx context.Context, userID string) (*dto.UserResponse, error) {
+func (s *authService) GetInfo(ctx *gin.Context, userID string) (*dto.UserResponse, error) {
 	user, erro := s.repo.GetUserInfo(userID)
 	if erro != nil {
 		return nil, erro

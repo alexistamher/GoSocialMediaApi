@@ -6,6 +6,7 @@ import (
 	errors "github.com/alexistamher/social-api-go/internal/domain"
 	"github.com/alexistamher/social-api-go/internal/handler/dto"
 	"github.com/alexistamher/social-api-go/internal/service"
+	"github.com/alexistamher/social-api-go/internal/util"
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,7 +25,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	res, err := h.authService.Register(c.Request.Context(), req)
+	res, err := h.authService.Register(c, req)
 	if err != nil {
 		respondError(c, err)
 		return
@@ -40,7 +41,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	res, err := h.authService.Login(c.Request.Context(), req)
+	res, err := h.authService.Login(c, req)
 	if err != nil {
 		respondError(c, err)
 		return
@@ -56,11 +57,21 @@ func (h *AuthHandler) GetInfo(c *gin.Context) {
 		return
 	}
 
-	res, err := h.authService.GetInfo(c.Request.Context(), userID.(string))
+	res, err := h.authService.GetInfo(c, userID.(string))
 	if err != nil {
 		respondError(c, err)
 		return
 	}
 
 	c.JSON(http.StatusOK, res)
+}
+
+func (h *AuthHandler) Health(c *gin.Context) {
+	userID, exists := c.Get(UserIDKey)
+	if !exists {
+		respondError(c, errors.ErrMissingUserID)
+		return
+	}
+
+	go util.CallExternalService(c, userID.(string))
 }

@@ -35,6 +35,7 @@ func New(h Handlers, authMiddleware gin.HandlerFunc) *gin.Engine {
 	private.Use(authMiddleware)
 	{
 		private.GET("/auth/info", h.Auth.GetInfo)
+		private.GET("/auth/health", h.Auth.Health)
 
 		private.POST("/posts", h.Post.CreatePost)
 		private.GET("/posts", h.Post.GetUserPosts)
