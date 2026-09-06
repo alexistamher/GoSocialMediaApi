@@ -132,8 +132,16 @@ func (p *postRepository) GetPostByID(postID string) (*dmodels.PostWithDetails, e
 		return nil, err
 	}
 
+	var commentsCount int64
+	if err := p.db.Table("comments").
+		Where("post_id = ? AND parent_comment_id IS NULL", postID).
+		Count(&commentsCount).Error; err != nil {
+		return nil, err
+	}
+
 	dreactions := reactions[postID]
 	rpost := post.ToDomainPostWithDetails(&dreactions)
+	rpost.CommentsCount = uint(commentsCount)
 
 	return rpost, nil
 }
@@ -205,7 +213,7 @@ func getCommentsCountByPostIDs(db *gorm.DB, postIDs []string) (map[string]int, e
 	}
 	if err := db.Table("comments").
 		Select("post_id, count(id) as count").
-		Where("post_id IN ?", postIDs).
+		Where("post_id IN ? AND parent_comment_id IS NULL", postIDs).
 		Group("post_id").
 		Scan(&results).Error; err != nil {
 		return nil, err

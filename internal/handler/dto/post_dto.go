@@ -28,6 +28,7 @@ type PostWithDetailsResponse struct {
 	ID               string                    `json:"id"`
 	Content          string                    `json:"content"`
 	Author           AuthorResponse            `json:"author"`
+	CommentsCount    uint                      `json:"comments_count"`
 	PreviewReactions []PreviewReactionResponse `json:"preview_reactions"`
 	Visibility       string                    `json:"visibility" binding:"oneof=friends public"`
 	CreatedAt        uint64                    `json:"created_at"`
@@ -73,6 +74,7 @@ func ResponseFromDomainPostWithDetails(p *models.PostWithDetails) *PostWithDetai
 		ID:               p.ID,
 		Content:          p.Content,
 		Author:           *ResponseFromDomainAuthor(&p.Author),
+		CommentsCount:    p.CommentsCount,
 		PreviewReactions: reactions,
 		Visibility:       string(p.Visibility),
 		CreatedAt:        p.CreatedAt,
