@@ -4,17 +4,18 @@ import (
 	"github.com/alexistamher/social-api-go/internal/domain/repository"
 	"github.com/alexistamher/social-api-go/internal/handler/auth"
 	"github.com/alexistamher/social-api-go/internal/handler/dto"
-	"github.com/alexistamher/social-api-go/internal/util"
 	"github.com/gin-gonic/gin"
 )
 
 type authService struct {
-	repo repository.AuthRepository
+	repo     repository.AuthRepository
+	ntfyRepo repository.NotificationRepository
 }
 
-func NewAuthService(repo repository.AuthRepository) AuthService {
+func NewAuthService(repo repository.AuthRepository, ntfyRepo repository.NotificationRepository) AuthService {
 	return &authService{
-		repo: repo,
+		repo:     repo,
+		ntfyRepo: ntfyRepo,
 	}
 }
 
@@ -44,7 +45,7 @@ func (s *authService) Login(ctx *gin.Context, req dto.LoginRequest) (*dto.AuthRe
 		return nil, erro
 	}
 
-	go util.CallExternalService(ctx, *userID)
+	go s.ntfyRepo.RegisterConnection(ctx, *userID)
 	return &dto.AuthResponse{
 		AccessToken:  token,
 		RefreshToken: token,

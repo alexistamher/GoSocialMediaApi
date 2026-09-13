@@ -22,8 +22,9 @@ func main() {
 
 	port := os.Getenv("PORT")
 	DB := db.StartDB()
+	nftyRepo := repository.NewNotificationRepository()
 	authRepo := repository.NewAuthRepository(DB)
-	authService := service.NewAuthService(authRepo)
+	authService := service.NewAuthService(authRepo, nftyRepo)
 
 	postRepo := repository.NewPostRepository(DB)
 	postService := service.NewPostService(postRepo)

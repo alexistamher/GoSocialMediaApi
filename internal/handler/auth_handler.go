@@ -6,7 +6,6 @@ import (
 	errors "github.com/alexistamher/social-api-go/internal/domain"
 	"github.com/alexistamher/social-api-go/internal/handler/dto"
 	"github.com/alexistamher/social-api-go/internal/service"
-	"github.com/alexistamher/social-api-go/internal/util"
 	"github.com/gin-gonic/gin"
 )
 
@@ -67,11 +66,9 @@ func (h *AuthHandler) GetInfo(c *gin.Context) {
 }
 
 func (h *AuthHandler) Health(c *gin.Context) {
-	userID, exists := c.Get(UserIDKey)
+	_, exists := c.Get(UserIDKey)
 	if !exists {
 		respondError(c, errors.ErrMissingUserID)
 		return
 	}
-
-	go util.CallExternalService(c, userID.(string))
 }

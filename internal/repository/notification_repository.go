@@ -1,4 +1,4 @@
-package util
+package repository
 
 import (
 	"bytes"
@@ -8,10 +8,18 @@ import (
 	"net/http"
 	"os"
 
+	drepository "github.com/alexistamher/social-api-go/internal/domain/repository"
 	"github.com/gin-gonic/gin"
 )
 
-func CallExternalService(c *gin.Context, connectionID string) {
+type notificationRepository struct {
+}
+
+func NewNotificationRepository() drepository.NotificationRepository {
+	return &notificationRepository{}
+}
+
+func (n *notificationRepository) RegisterConnection(c *gin.Context, connectionID string) {
 	url := os.Getenv("NOTIFICATION_URL")
 	reqBody := map[string]string{
 		"action_type":   "register",

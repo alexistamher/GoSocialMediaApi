@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/alexistamher/social-api-go/internal/domain/repository"
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 	cpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 	"gorm.io/driver/postgres"
@@ -45,3 +47,11 @@ func setupAuthIntegrationDB(t *testing.T) (*gorm.DB, func()) {
 
 	return db, cleanup
 }
+
+type mockNotificationRepository struct{}
+
+func NewMockNoticationRepository() repository.NotificationRepository {
+	return &mockNotificationRepository{}
+}
+
+func (n *mockNotificationRepository) RegisterConnection(c *gin.Context, connectionID string) {}

@@ -25,8 +25,9 @@ func TestAuthHandler_Integration_Flow(t *testing.T) {
 	db, cleanup := setupAuthIntegrationDB(t)
 	defer cleanup()
 
+	ntfyRepo := NewMockNoticationRepository()
 	authRepo := repository.NewAuthRepository(db)
-	authSvc := service.NewAuthService(authRepo)
+	authSvc := service.NewAuthService(authRepo, ntfyRepo)
 
 	handlers := router.Handlers{
 		Auth: handler.NewAuthHandler(authSvc),

@@ -27,8 +27,9 @@ func TestPostHandler_Integration_Flow(t *testing.T) {
 	db, cleanup := setupAuthIntegrationDB(t)
 	defer cleanup()
 
+	ntfyRepo := NewMockNoticationRepository()
 	authRepo := repository.NewAuthRepository(db)
-	authSvc := service.NewAuthService(authRepo)
+	authSvc := service.NewAuthService(authRepo, ntfyRepo)
 	postRepo := repository.NewPostRepository(db)
 	postSvc := service.NewPostService(postRepo)
 	cmntRepo := repository.NewCommentRepository(db)
