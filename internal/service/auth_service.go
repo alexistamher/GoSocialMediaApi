@@ -60,3 +60,7 @@ func (s *authService) GetInfo(ctx *gin.Context, userID string) (*dto.UserRespons
 
 	return dto.UserDomainToDto(user), nil
 }
+
+func (s *authService) Health(ctx *gin.Context, userID string) {
+	s.ntfyRepo.RegisterConnection(ctx, userID)
+}

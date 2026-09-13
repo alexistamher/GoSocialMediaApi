@@ -66,9 +66,11 @@ func (h *AuthHandler) GetInfo(c *gin.Context) {
 }
 
 func (h *AuthHandler) Health(c *gin.Context) {
-	_, exists := c.Get(UserIDKey)
+	userID, exists := c.Get(UserIDKey)
 	if !exists {
 		respondError(c, errors.ErrMissingUserID)
 		return
 	}
+
+	h.authService.Health(c, userID.(string))
 }

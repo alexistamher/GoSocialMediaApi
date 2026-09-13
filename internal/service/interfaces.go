@@ -9,6 +9,7 @@ type AuthService interface {
 	Register(ctx *gin.Context, req dto.RegisterRequest) (*dto.AuthResponse, error)
 	Login(ctx *gin.Context, req dto.LoginRequest) (*dto.AuthResponse, error)
 	GetInfo(ctx *gin.Context, userID string) (*dto.UserResponse, error)
+	Health(ctx *gin.Context, userID string)
 }
 
 type CommentService interface {

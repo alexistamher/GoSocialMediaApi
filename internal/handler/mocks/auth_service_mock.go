@@ -24,3 +24,5 @@ func (m *AuthServiceMock) GetInfo(ctx *gin.Context, userID string) (*dto.UserRes
 	args := m.Called(ctx, userID)
 	return args.Get(0).(*dto.UserResponse), args.Error(1)
 }
+
+func (m *AuthServiceMock) Health(ctx *gin.Context, userID string) {}
